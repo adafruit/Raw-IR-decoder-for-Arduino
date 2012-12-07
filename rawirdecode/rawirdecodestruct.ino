@@ -1,3 +1,4 @@
+
 /* Raw IR decoder sketch!
  
  This sketch/program uses the Arduno and a PNA4602 to 
@@ -89,15 +90,22 @@ void printpulses(void) {
   
   // print it in a 'array' format
   Serial.println("int IRsignal[] = {");
-  Serial.println("// ON, OFF (in 10's of microseconds)");
+  Serial.println("// ON, OFF ");
   for (uint8_t i = 0; i < currentpulse-1; i++) {
-    Serial.print("\t"); // tab
-    Serial.print(pulses[i][1] * RESOLUTION / 10, DEC);
-    Serial.print(", ");
-    Serial.print(pulses[i+1][0] * RESOLUTION / 10, DEC);
-    Serial.println(",");
+    //Serial.print("\t"); // tab
+    Serial.print("pulseIR(");
+    Serial.print(pulses[i][1] * RESOLUTION , DEC);
+    Serial.print(");");
+    Serial.println("");
+    //Serial.print("\t");
+    Serial.print("delayMicroseconds(");
+    Serial.print(pulses[i+1][0] * RESOLUTION , DEC);
+    Serial.println(");");
+
   }
-  Serial.print("\t"); // tab
-  Serial.print(pulses[currentpulse-1][1] * RESOLUTION / 10, DEC);
-  Serial.print(", 0};");
+  //Serial.print("\t"); // tab
+  Serial.print("pulseIR(");
+  Serial.print(pulses[currentpulse-1][1] * RESOLUTION, DEC);
+  Serial.print(");");
+
 }
