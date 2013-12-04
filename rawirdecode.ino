@@ -73,8 +73,6 @@ void loop(void) {
 
   currentpulse=0;
   receivepulses();
-  Serial.print("pulses: ");
-  Serial.println(currentpulse);
   printpulses();
 }
 
