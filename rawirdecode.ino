@@ -28,12 +28,12 @@
 #define RESOLUTION 20 
 
 // we will store up to 100 pulse pairs (this is -a lot-)
-uint16_t pulses[100][2];  // pair is high and low pulse 
-uint8_t currentpulse = 0; // index for pulses we're storing
+uint16_t pulses[400][2];  // pair is high and low pulse 
+uint16_t currentpulse = 0; // index for pulses we're storing
 
 void setup(void) {
   Serial.begin(9600);
-  Serial.println("Ready to decode IR!");
+  Serial.println(F("Ready to decode IR!"));
 }
 
 void loop(void) {
@@ -79,25 +79,36 @@ void loop(void) {
 }
 
 void printpulses(void) {
-  Serial.println("\n\r\n\rReceived: \n\rOFF \tON");
+  Serial.print(F("Free RAM: "));
+  Serial.println(freeRam());
+  Serial.println(F("\n\r\n\rReceived: \n\rOFF \tON"));
+  Serial.print(F("Number of pulses: "));
+  Serial.println(currentpulse);
+  
   for (uint8_t i = 0; i < currentpulse; i++) {
     Serial.print(pulses[i][0] * RESOLUTION, DEC);
-    Serial.print(" usec, ");
+    Serial.print(" usec,\t");
     Serial.print(pulses[i][1] * RESOLUTION, DEC);
     Serial.println(" usec");
   }
   
   // print it in a 'array' format
-  Serial.println("int IRsignal[] = {");
-  Serial.println("// ON, OFF (in 10's of microseconds)");
+  Serial.println(F("int IRsignal[] = {"));
+  Serial.println(F("// ON, OFF (in 10's of microseconds)"));
   for (uint8_t i = 0; i < currentpulse-1; i++) {
-    Serial.print("\t"); // tab
+    Serial.print(F("\t")); // tab
     Serial.print(pulses[i][1] * RESOLUTION / 10, DEC);
-    Serial.print(", ");
+    Serial.print(F(", "));
     Serial.print(pulses[i+1][0] * RESOLUTION / 10, DEC);
-    Serial.println(",");
+    Serial.println(F(","));
   }
-  Serial.print("\t"); // tab
+  Serial.print(F("\t")); // tab
   Serial.print(pulses[currentpulse-1][1] * RESOLUTION / 10, DEC);
-  Serial.print(", 0};");
+  Serial.print(F(", 0};"));
+}
+
+int freeRam () {
+  extern int __heap_start, *__brkval;
+  int v;
+  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
 }
