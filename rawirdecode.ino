@@ -274,21 +274,41 @@ void printpulses(void) {
     }
 
     // Operating mode
-    switch (bytes[6]) {
-      case 0x60:
+    switch (bytes[6] & 0x38) { // 0b00111000
+      case 0x20:
         Serial.println("MODE AUTO");
         break;
-      case 0x48:
+      case 0x08:
         Serial.println("MODE HEAT");
         break;
-      case 0x58:
+      case 0x18:
         Serial.println("MODE COOL");
         break;
-      case 0x50:
+      case 0x10:
         Serial.println("MODE DRY");
         break;
       default:
         Serial.println("MODE unknown");
+        break;
+    }
+
+    // I-See
+    switch (bytes[6] & 0x40) { // 0b01000000
+      case 0x40:
+        Serial.println("I-See: ON");
+        break;
+      case 0x00:
+        Serial.println("I-See: OFF");
+        break;
+    }
+
+    // Plasma
+    switch (bytes[15] & 0x40) { // 0b01000000
+      case 0x40:
+        Serial.println("Plasma: ON");
+        break;
+      case 0x00:
+        Serial.println("Plasma: OFF");
         break;
     }
 
@@ -297,7 +317,7 @@ void printpulses(void) {
     Serial.println(bytes[7] + 16);
 
     // Fan speed
-    switch (bytes[9] & 0x07) {
+    switch (bytes[9] & 0x07) { // 0b00000111
       case 0x00:
         Serial.println("FAN AUTO");
         break;
@@ -319,27 +339,33 @@ void printpulses(void) {
     }
 
     // Vertical air direction
-    switch (bytes[9] & 0xF8) {
-      case 0x48:
+    switch (bytes[9] & 0xF8) { // 0b11111000
+      case 0x40: // 0b01000
+        Serial.println("VANE: AUTO1?");
+        break;
+      case 0x48: // 0b01001
         Serial.println("VANE: UP");
         break;
-      case 0x50:
+      case 0x50: // 0b01010
         Serial.println("VANE: UP-1");
         break;
-      case 0x58:
+      case 0x58: // 0b01011
         Serial.println("VANE: UP-2");
         break;
-      case 0x60:
+      case 0x60: // 0b01100
         Serial.println("VANE: UP-3");
         break;
-      case 0x68:
+      case 0x68: // 0b01101
         Serial.println("VANE: DOWN");
         break;
-      case 0x78:
+      case 0x78: // 0b01111
         Serial.println("VANE: SWING");
         break;
-      case 0x80:
-        Serial.println("VANE: AUTO");
+      case 0x80: // 0b10000
+        Serial.println("VANE: AUTO2?");
+        break;
+      case 0xB8: // 0b10111
+        Serial.println("VANE: AUTO3?");
         break;
       default:
         Serial.println("VANE: unknown");
@@ -347,7 +373,7 @@ void printpulses(void) {
     }
 
     // Horizontal air direction
-    switch (bytes[8] & 0xF0) {
+    switch (bytes[8] & 0xF0) { // 0b11110000
       case 0x10:
         Serial.println("WIDE VANE: LEFT");
         break;
