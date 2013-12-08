@@ -190,6 +190,8 @@ void printpulses(void) {
 
   int bitCount = 0;
   byte currentByte = 0;
+  byte byteCount = 0;
+  byte bytes[32];
 
   Serial.print("Number of symbols: ");
   Serial.println(currentpulse);
@@ -212,11 +214,9 @@ void printpulses(void) {
   Serial.println(space_one_avg);
 
 
-  // Decode the string of symbols to HEX digits
-  for (int i = 0; i < currentpulse; i++)
-  {
-    if (symbols[i] == '0' || symbols[i] == '1')
-    {
+  // Decode the string of bits to a byte array
+  for (int i = 0; i < currentpulse; i++) {
+    if (symbols[i] == '0' || symbols[i] == '1') {
       currentByte >>= 1;
       bitCount++;
 
@@ -225,15 +225,150 @@ void printpulses(void) {
       }
 
       if (bitCount == 8) {
-        if (currentByte < 0x10) {
-          Serial.print("0");
-        }
-        Serial.print(currentByte,HEX);
-        Serial.print(",");
+        bytes[byteCount++] = currentByte;
         bitCount = 0;
       }
     }
   }
 
+  // Print the byte array
+  for (int i = 0; i < byteCount; i++) {
+    if (bytes[i] < 0x10) {
+      Serial.print("0");
+    }
+    Serial.print(bytes[i],HEX);
+    if ( i < byteCount - 1 ) {
+      Serial.print(",");
+    }
+  }
   Serial.println();
+
+  // If this looks like a Mitsubishi FD-25 code...
+  if ( byteCount == 36 && bytes[0] == 0x23 && (memcmp(bytes, bytes+18, 17) == 0)) {
+    Serial.println("Looks like a Mitsubishi FD-25 protocol");
+
+    // Check if the checksum matches
+    byte checksum = 0;
+
+    for (int i=0; i<17; i++) {
+      checksum += bytes[i];
+    }
+
+    if (checksum == bytes[17]) {
+      Serial.println("Checksum matches");
+    } else {
+      Serial.println("Checksum does not match");
+    }
+
+    // Power mode
+    switch (bytes[5]) {
+      case 0x00:
+        Serial.println("POWER OFF");
+        break;
+      case 0x20:
+        Serial.println("POWER ON");
+        break;
+      default:
+        Serial.println("POWER unknown");
+        break;
+    }
+
+    // Operating mode
+    switch (bytes[6]) {
+      case 0x60:
+        Serial.println("MODE AUTO");
+        break;
+      case 0x48:
+        Serial.println("MODE HEAT");
+        break;
+      case 0x58:
+        Serial.println("MODE COOL");
+        break;
+      case 0x50:
+        Serial.println("MODE DRY");
+        break;
+      default:
+        Serial.println("MODE unknown");
+        break;
+    }
+
+    // Temperature
+    Serial.print("Temperature: ");
+    Serial.println(bytes[7] + 16);
+
+    // Fan speed
+    switch (bytes[9] & 0x07) {
+      case 0x00:
+        Serial.println("FAN AUTO");
+        break;
+      case 0x01:
+        Serial.println("FAN 1");
+        break;
+      case 0x02:
+        Serial.println("FAN 2");
+        break;
+      case 0x03:
+        Serial.println("FAN 3");
+        break;
+      case 0x04:
+        Serial.println("FAN 4");
+        break;
+      default:
+        Serial.println("FAN unknown");
+        break;
+    }
+
+    // Vertical air direction
+    switch (bytes[9] & 0xF8) {
+      case 0x48:
+        Serial.println("VANE: UP");
+        break;
+      case 0x50:
+        Serial.println("VANE: UP-1");
+        break;
+      case 0x58:
+        Serial.println("VANE: UP-2");
+        break;
+      case 0x60:
+        Serial.println("VANE: UP-3");
+        break;
+      case 0x68:
+        Serial.println("VANE: DOWN");
+        break;
+      case 0x78:
+        Serial.println("VANE: SWING");
+        break;
+      case 0x80:
+        Serial.println("VANE: AUTO");
+        break;
+      default:
+        Serial.println("VANE: unknown");
+        break;
+    }
+
+    // Horizontal air direction
+    switch (bytes[8] & 0xF0) {
+      case 0x10:
+        Serial.println("WIDE VANE: LEFT");
+        break;
+      case 0x20:
+        Serial.println("WIDE VANE: MIDDLE LEFT");
+        break;
+      case 0x30:
+        Serial.println("WIDE VANE: MIDDLE");
+        break;
+      case 0x40:
+        Serial.println("WIDE VANE: MIDDLE RIGHT");
+        break;
+      case 0x50:
+        Serial.println("WIDE VANE: RIGHT");
+        break;
+      case 0xC0:
+        Serial.println("WIDE VANE: SWING");
+        break;
+      default:
+        Serial.println("WIDE VANE: unknown");
+        break;
+    }
+  }
 }
