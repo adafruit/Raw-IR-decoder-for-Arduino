@@ -25,68 +25,103 @@
 // what our timing resolution should be, larger is better
 // as its more 'precise' - but too large and you wont get
 // accurate timing
-#define RESOLUTION 20
+uint16_t RESOLUTION=20;
 
-// we will store up to 100 pulse pairs (this is -a lot-)
-uint16_t pulses[400][2];  // pair is high and low pulse
+
+// The thresholds for different symbols
+// These should work with Panasonic (from DKE on), Fujitsu and Mitsubishi
+// Anyway, adjust these to get reliable readings
+
+#define MARK_THRESHOLD_BIT_HEADER    2000 // Value between BIT MARK and HEADER MARK
+#define SPACE_THRESHOLD_ZERO_ONE     800  // Value between ZERO SPACE and ONE SPACE
+#define SPACE_THRESHOLD_ONE_HEADER   1400 // Value between ONE SPACE and HEADER SPACE
+#define SPACE_THRESHOLD_HEADER_PAUSE 8000 // Value between HEADER SPACE and PAUSE SPACE (Panasonic only)
+
+// This set works on the Panasonic CKP
+/*
+#define MARK_THRESHOLD_BIT_HEADER    2000 // Value between BIT MARK and HEADER MARK
+#define SPACE_THRESHOLD_ZERO_ONE     1800 // Value between ZERO SPACE and ONE SPACE
+#define SPACE_THRESHOLD_ONE_HEADER   3200 // Value between ONE SPACE and HEADER SPACE
+#define SPACE_THRESHOLD_HEADER_PAUSE 8000 // Value between HEADER SPACE and PAUSE SPACE (Panasonic only)
+*/
+
+/*
+Panasonic CKP timings:
+PAUSE SPACE:  13520
+HEADER MARK:  3394
+HEADER SPACE: 3326
+BIT MARK:     812
+ZERO SPACE:   751
+ONE SPACE:    2449
+
+Panasonic DKE, JNE and NKE timings:
+PAUSE SPACE:  9700
+HEADER MARK:  3439
+HEADER SPACE: 1599
+BIT MARK:     380
+ZERO SPACE:   319
+ONE SPACE:    1197
+
+Fujitsu Nocria timings:
+HEADER MARK   3327
+HEADER SPACE  1519
+BIT MARK      364
+ZERO SPACE    277
+ONE SPACE     1104
+
+Mitsubishi FD-25 timings:
+HEADER MARK:  3450
+HEADER SPACE: 1700
+BIT MARK:     500
+ZERO SPACE:   350
+ONE SPACE:    1250
+*/
+
+
+uint32_t mark_header_avg = 0;
+uint16_t mark_header_cnt = 0;
+uint32_t mark_bit_avg = 0;
+uint16_t mark_bit_cnt = 0;
+uint32_t space_zero_avg = 0;
+uint16_t space_zero_cnt = 0;
+uint32_t space_one_avg = 0;
+uint16_t space_one_cnt = 0;
+uint32_t space_header_avg = 0;
+uint16_t space_header_cnt = 0;
+uint32_t space_pause_avg = 0;
+uint16_t space_pause_cnt = 0;
+
+// we will store up to 500 symbols
+char symbols[500];  // decoded symbols
 uint16_t currentpulse = 0; // index for pulses we're storing
-
-boolean nodata = true; // No name for this sample yet
-char samplename[50];   // Holds the name of the sample
 
 void setup(void) {
   Serial.begin(9600);
   delay(1000);
-  Serial.println(F("Ready to decode IR!"));
-  Serial.println(F("Enter the name of each sample and press 'Send' before sending an IR signal. The data is in JSON format\n\n"));
-
-  Serial.println(F(""));
-  Serial.println(F("{"));
-
+  Serial.println(F("Ready to decode IR!\n\n"));
 }
 
 void loop(void) {
   char incoming = 0;
-  char sampleposition = 0;
 
-  memset(samplename, 0, 50); // Wipe the name of the sample
+  memset(symbols, 0, sizeof(symbols)); // Wipe the symbols
 
-  // Receive the name of the sample
-  while (nodata) {
-    while (nodata || Serial.available() ) {
-      if (Serial.available())
-      {
-        //read the incoming character
-        char incoming = Serial.read();
-        samplename[sampleposition++] = incoming;
-        nodata=false;
-        delay(50);
-      }
-    }
-  }
-
-  // Print out the first part of the JSON array row
-  Serial.print(F("   \""));
-  Serial.print(samplename);
-  Serial.print(F("\": [ "));
-  Serial.flush();
+  // Only Panasonic seems to use the pause
+  space_pause_avg = 0;
+  space_pause_cnt = 0;
 
   currentpulse=0;
   receivepulses();
-  Serial.print("pulses: ");
-  Serial.println(currentpulse);
   printpulses();
 }
 
 void receivepulses(void) {
   uint16_t highpulse, lowpulse;  // temporary storage timing
 
-  while (true)
+  while (currentpulse < sizeof(symbols))
   {
-     highpulse = lowpulse = 0; // start out with no pulse length
-
-     //  while (digitalRead(IRpin)) { // this is too slow!
-    while (IRpin_PIN & (1 << IRpin)) {
+     highpulse = 0;
+     while (IRpin_PIN & (1 << IRpin)) {
        // pin is still HIGH
 
        // count off another few microseconds
@@ -100,10 +135,32 @@ void receivepulses(void) {
          return;
        }
     }
-    // we didn't time out so lets stash the reading
-    pulses[currentpulse][0] = highpulse;
+
+    highpulse = highpulse * RESOLUTION;
+
+    if (currentpulse > 0)
+    {
+      // this is a SPACE
+      if ( highpulse > SPACE_THRESHOLD_HEADER_PAUSE ) {
+        symbols[currentpulse] = 'W';
+        // Cumulative moving average, see http://en.wikipedia.org/wiki/Moving_average#Cumulative_moving_average
+        space_pause_avg = (highpulse + space_pause_cnt * space_pause_avg) / ++space_pause_cnt;
+      } else if ( highpulse > SPACE_THRESHOLD_ONE_HEADER ) {
+        symbols[currentpulse] = 'h';
+        // Cumulative moving average, see http://en.wikipedia.org/wiki/Moving_average#Cumulative_moving_average
+        space_header_avg = (highpulse + space_header_cnt * space_header_avg) / ++space_header_cnt;
+      } else if ( highpulse > SPACE_THRESHOLD_ZERO_ONE ) {
+        symbols[currentpulse] = '1';
+        space_one_avg = (highpulse + space_one_cnt * space_one_avg) / ++space_one_cnt;
+      } else {
+        symbols[currentpulse] = '0';
+        space_zero_avg = (highpulse + space_zero_cnt * space_zero_avg) / ++space_zero_cnt;
+      }
+    }
+    currentpulse++;
 
     // same as above
+    lowpulse = 0;
     while (! (IRpin_PIN & _BV(IRpin))) {
        // pin is still LOW
        lowpulse++;
@@ -112,30 +169,71 @@ void receivepulses(void) {
          return;
        }
     }
-    pulses[currentpulse][1] = lowpulse;
+
+    // this is a MARK
+
+    lowpulse = lowpulse * RESOLUTION;
+
+    if ( lowpulse > MARK_THRESHOLD_BIT_HEADER ) {
+      symbols[currentpulse] = 'H';
+      currentpulse++;
+      mark_header_avg = (lowpulse + mark_header_cnt * mark_header_avg) / ++mark_header_cnt;
+    } else {
+      mark_bit_avg = (lowpulse + mark_bit_cnt * mark_bit_avg) / ++mark_bit_cnt;
+    }
 
     // we read one high-low pulse successfully, continue!
-    currentpulse++;
   }
 }
 
 void printpulses(void) {
-  // print it in JSON format
 
-  for (uint8_t i = 0; i < currentpulse-1; i++) {
-    Serial.print(pulses[i][1] * RESOLUTION, DEC);
-    Serial.print(F(", "));
-    Serial.print(pulses[i+1][0] * RESOLUTION, DEC);
-    Serial.print(F(", "));
+  int bitCount = 0;
+  byte currentByte = 0;
+
+  Serial.print("Number of symbols: ");
+  Serial.println(currentpulse);
+
+  Serial.println("Symbols:");
+  Serial.println(symbols+1);
+
+  Serial.println("Timings (in us): ");
+  Serial.print("PAUSE SPACE:  ");
+  Serial.println(space_pause_avg);
+  Serial.print("HEADER MARK:  ");
+  Serial.println(mark_header_avg);
+  Serial.print("HEADER SPACE: ");
+  Serial.println(space_header_avg);
+  Serial.print("BIT MARK:     ");
+  Serial.println(mark_bit_avg);
+  Serial.print("ZERO SPACE:   ");
+  Serial.println(space_zero_avg);
+  Serial.print("ONE SPACE:    ");
+  Serial.println(space_one_avg);
+
+
+  // Decode the string of symbols to HEX digits
+  for (int i = 0; i < currentpulse; i++)
+  {
+    if (symbols[i] == '0' || symbols[i] == '1')
+    {
+      currentByte >>= 1;
+      bitCount++;
+
+      if (symbols[i] == '1') {
+        currentByte |= 0x80;
+      }
+
+      if (bitCount == 8) {
+        if (currentByte < 0x10) {
+          Serial.print("0");
+        }
+        Serial.print(currentByte,HEX);
+        Serial.print(",");
+        bitCount = 0;
+      }
+    }
   }
-  Serial.print(pulses[currentpulse-1][1] * RESOLUTION, DEC);
-  Serial.println(F(", 0 ],"));
 
-  nodata = true;
-}
-
-int freeRam () {
-  extern int __heap_start, *__brkval;
-  int v;
-  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
+  Serial.println();
 }
