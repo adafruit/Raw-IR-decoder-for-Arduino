@@ -35,14 +35,22 @@ uint16_t RESOLUTION=20;
 #define MARK_THRESHOLD_BIT_HEADER    2000 // Value between BIT MARK and HEADER MARK
 #define SPACE_THRESHOLD_ZERO_ONE     800  // Value between ZERO SPACE and ONE SPACE
 #define SPACE_THRESHOLD_ONE_HEADER   1400 // Value between ONE SPACE and HEADER SPACE
-#define SPACE_THRESHOLD_HEADER_PAUSE 8000 // Value between HEADER SPACE and PAUSE SPACE (Panasonic only)
+#define SPACE_THRESHOLD_HEADER_PAUSE 8000 // Value between HEADER SPACE and PAUSE SPACE (Panasonic/Midea only)
 
 // This set works on the Panasonic CKP
 /*
 #define MARK_THRESHOLD_BIT_HEADER    2000 // Value between BIT MARK and HEADER MARK
 #define SPACE_THRESHOLD_ZERO_ONE     1800 // Value between ZERO SPACE and ONE SPACE
 #define SPACE_THRESHOLD_ONE_HEADER   3200 // Value between ONE SPACE and HEADER SPACE
-#define SPACE_THRESHOLD_HEADER_PAUSE 8000 // Value between HEADER SPACE and PAUSE SPACE (Panasonic only)
+#define SPACE_THRESHOLD_HEADER_PAUSE 8000 // Value between HEADER SPACE and PAUSE SPACE (Panasonic/Midea only)
+*/
+
+// This set works on Carrier & Midea / Ultimate Pro Plus 13 FP
+/*
+#define MARK_THRESHOLD_BIT_HEADER    2000 // Value between BIT MARK and HEADER MARK
+#define SPACE_THRESHOLD_ZERO_ONE     1200 // Value between ZERO SPACE and ONE SPACE
+#define SPACE_THRESHOLD_ONE_HEADER   3200 // Value between ONE SPACE and HEADER SPACE
+#define SPACE_THRESHOLD_HEADER_PAUSE 4500 // Value between HEADER SPACE and PAUSE SPACE (Panasonic/Midea only)
 */
 
 /*
