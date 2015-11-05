@@ -51,7 +51,7 @@ uint16_t RESOLUTION=20;
 
 #define MARK_THRESHOLD_BIT_HEADER    2000 // Value between BIT MARK and HEADER MARK
 #define SPACE_THRESHOLD_ZERO_ONE     800  // Value between ZERO SPACE and ONE SPACE
-#define SPACE_THRESHOLD_ONE_HEADER   1500 // Value between ONE SPACE and HEADER SPACE
+#define SPACE_THRESHOLD_ONE_HEADER   1300 // Value between ONE SPACE and HEADER SPACE
 #define SPACE_THRESHOLD_HEADER_PAUSE 8000 // Value between HEADER SPACE and PAUSE SPACE (Panasonic/Midea only)
 
 // This set works on the Panasonic CKP
@@ -124,7 +124,18 @@ void setup(void) {
 void loop(void) {
   char incoming = 0;
 
-  memset(symbols, 0, sizeof(symbols)); // Wipe the symbols
+mark_header_avg = 0;
+mark_header_cnt = 0;
+mark_bit_avg = 0;
+mark_bit_cnt = 0;
+space_zero_avg = 0;
+space_zero_cnt = 0;
+space_one_avg = 0;
+space_one_cnt = 0;
+space_header_avg = 0;
+space_header_cnt = 0;
+space_pause_avg = 0;
+space_pause_cnt = 0;
 
   // Only Panasonic seems to use the pause
   space_pause_avg = 0;
@@ -620,6 +631,91 @@ void printpulses(void) {
     } else {
       Serial.print(" does not match ");
       Serial.println(((bytes[12] & 0xF0) >> 4), HEX);
+    }
+  }
+
+  // If this looks like a Daikin code...
+  if ( byteCount == 27 && bytes[0] == 0x11 && bytes[1] == 0xDA && bytes[2] == 0x27 ) {
+    Serial.println("Looks like a Daikin protocol");
+
+    // Power mode
+    switch (bytes[13] & 0x01) {
+      case 0x00:
+        Serial.println("POWER OFF");
+        break;
+      case 0x01:
+        Serial.println("POWER ON");
+        break;
+    }
+
+    // Operating mode
+    switch (bytes[13] & 0x70) {
+      case 0x00:
+        Serial.println("MODE AUTO");
+        break;
+      case 0x40:
+        Serial.println("MODE HEAT");
+        break;
+      case 0x30:
+        Serial.println("MODE COOL");
+        break;
+      case 0x20:
+        Serial.println("MODE DRY");
+        break;
+      case 0x60:
+        Serial.println("MODE FAN");
+        break;
+      }
+
+    // Temperature
+    Serial.print("Temperature: ");
+    Serial.println(bytes[14] / 2);
+
+    // Fan speed
+    switch (bytes[16] & 0xF0) {
+      case 0xA0:
+        Serial.println("FAN: AUTO");
+        break;
+      case 0x30:
+        Serial.println("FAN: 1");
+        break;
+      case 0x40:
+        Serial.println("FAN: 2");
+        break;
+      case 0x50:
+        Serial.println("FAN: 3");
+        break;
+      case 0x60:
+        Serial.println("FAN: 4");
+        break;
+      case 0x70:
+        Serial.println("FAN: 5");
+        break;
+    }
+
+    // Check if the checksum matches
+    byte checksum = 0x00;
+
+    for (byte i = 0; i < 7; i++) {
+      checksum += bytes[i];
+    }
+
+    if ( bytes[7] == checksum ) {
+      Serial.println("Checksum 1 matches");
+    } else {
+      Serial.println("Checksum 1 does not match");
+    }
+
+    checksum = 0x00;
+
+    for (byte i = 8; i < 26; i++) {
+      checksum += bytes[i];
+    }
+
+    if ( bytes[26] == checksum ) {
+      Serial.println("Checksum 2 matches");
+    } else {
+      Serial.println("Checksum 2 does not match");
     }
   }
 }
