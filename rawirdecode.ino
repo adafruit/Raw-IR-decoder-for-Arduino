@@ -635,11 +635,11 @@ void printpulses(void) {
   }
 
   // If this looks like a Daikin code...
-  if ( byteCount == 27 && bytes[0] == 0x11 && bytes[1] == 0xDA && bytes[2] == 0x27 ) {
+  if ( byteCount == 35 && bytes[0] == 0x11 && bytes[1] == 0xDA && bytes[2] == 0x27 ) {
     Serial.println("Looks like a Daikin protocol");
 
     // Power mode
-    switch (bytes[13] & 0x01) {
+    switch (bytes[21] & 0x01) {
       case 0x00:
         Serial.println("POWER OFF");
         break;
@@ -649,7 +649,7 @@ void printpulses(void) {
     }
 
     // Operating mode
-    switch (bytes[13] & 0x70) {
+    switch (bytes[21] & 0x70) {
       case 0x00:
         Serial.println("MODE AUTO");
         break;
@@ -669,10 +669,10 @@ void printpulses(void) {
 
     // Temperature
     Serial.print("Temperature: ");
-    Serial.println(bytes[14] / 2);
+    Serial.println(bytes[22] / 2);
 
     // Fan speed
-    switch (bytes[16] & 0xF0) {
+    switch (bytes[24] & 0xF0) {
       case 0xA0:
         Serial.println("FAN: AUTO");
         break;
@@ -708,14 +708,26 @@ void printpulses(void) {
 
     checksum = 0x00;
 
-    for (byte i = 8; i < 26; i++) {
+    for (byte i = 8; i < 15; i++) {
       checksum += bytes[i];
     }
 
-    if ( bytes[26] == checksum ) {
+    if ( bytes[15] == checksum ) {
       Serial.println("Checksum 2 matches");
     } else {
       Serial.println("Checksum 2 does not match");
+    }
+
+    checksum = 0x00;
+
+    for (byte i = 16; i < 34; i++) {
+      checksum += bytes[i];
+    }
+
+    if ( bytes[34] == checksum ) {
+      Serial.println("Checksum 3 matches");
+    } else {
+      Serial.println("Checksum 3 does not match");
     }
   }
 }
