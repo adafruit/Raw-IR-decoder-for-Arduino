@@ -1,3 +1,12 @@
+#include <Arduino.h>
+
+bool decodeMitsubishiElectric(byte *bytes, int byteCount);
+bool decodeMitsubishiHeavy(byte *bytes, int byteCount);
+bool decodeDaikin(byte *bytes, int byteCount);
+bool decodeSharp(byte *bytes, int byteCount);
+bool decodeCarrier(byte *bytes, int byteCount);
+bool decodePanasonicCKP(byte *bytes, int byteCount);
+
 /* Raw IR decoder sketch!
 
  This sketch/program uses the Arduno and a PNA4602 to
@@ -33,69 +42,11 @@
 // accurate timing
 uint16_t RESOLUTION=20;
 
-
-#define BYTETOBINARYPATTERN "%d%d%d%d%d%d%d%d"
-#define BYTETOBINARY(byte)  \
-  (byte & 0x80 ? 1 : 0), \
-  (byte & 0x40 ? 1 : 0), \
-  (byte & 0x20 ? 1 : 0), \
-  (byte & 0x10 ? 1 : 0), \
-  (byte & 0x08 ? 1 : 0), \
-  (byte & 0x04 ? 1 : 0), \
-  (byte & 0x02 ? 1 : 0), \
-  (byte & 0x01 ? 1 : 0)
-
 // The thresholds for different symbols
-// These should work with Panasonic (from DKE on), Fujitsu and Mitsubishi
-// Anyway, adjust these to get reliable readings
-
-#define MARK_THRESHOLD_BIT_HEADER    2000 // Value between BIT MARK and HEADER MARK
-#define SPACE_THRESHOLD_ZERO_ONE     800  // Value between ZERO SPACE and ONE SPACE
-#define SPACE_THRESHOLD_ONE_HEADER   1300 // Value between ONE SPACE and HEADER SPACE
-#define SPACE_THRESHOLD_HEADER_PAUSE 8000 // Value between HEADER SPACE and PAUSE SPACE (Panasonic/Midea only)
-
-// This set works on the Panasonic CKP
-/*
-#define MARK_THRESHOLD_BIT_HEADER    2000 // Value between BIT MARK and HEADER MARK
-#define SPACE_THRESHOLD_ZERO_ONE     1800 // Value between ZERO SPACE and ONE SPACE
-#define SPACE_THRESHOLD_ONE_HEADER   3200 // Value between ONE SPACE and HEADER SPACE
-#define SPACE_THRESHOLD_HEADER_PAUSE 8000 // Value between HEADER SPACE and PAUSE SPACE (Panasonic/Midea only)
-*/
-
-// This set works on Carrier & Midea / Ultimate Pro Plus 13 FP
-
-
-/*
-Panasonic CKP timings:
-PAUSE SPACE:  13520
-HEADER MARK:  3394
-HEADER SPACE: 3326
-BIT MARK:     812
-ZERO SPACE:   751
-ONE SPACE:    2449
-
-Panasonic DKE, JNE and NKE timings:
-PAUSE SPACE:  9700
-HEADER MARK:  3439
-HEADER SPACE: 1599
-BIT MARK:     380
-ZERO SPACE:   319
-ONE SPACE:    1197
-
-Fujitsu Nocria timings:
-HEADER MARK   3327
-HEADER SPACE  1519
-BIT MARK      364
-ZERO SPACE    277
-ONE SPACE     1104
-
-Mitsubishi FD-25 timings:
-HEADER MARK:  3450
-HEADER SPACE: 1700
-BIT MARK:     500
-ZERO SPACE:   350
-ONE SPACE:    1250
-*/
+int MARK_THRESHOLD_BIT_HEADER    = 0; // Value between BIT MARK and HEADER MARK
+int SPACE_THRESHOLD_ZERO_ONE     = 0; // Value between ZERO SPACE and ONE SPACE
+int SPACE_THRESHOLD_ONE_HEADER   = 0; // Value between ONE SPACE and HEADER SPACE
+int SPACE_THRESHOLD_HEADER_PAUSE = 0; // Value between HEADER SPACE and PAUSE SPACE (Panasonic/Midea only)
 
 
 uint32_t mark_header_avg = 0;
@@ -115,38 +66,99 @@ uint16_t space_pause_cnt = 0;
 char symbols[500];  // decoded symbols
 uint16_t currentpulse = 0; // index for pulses we're storing
 
+uint8_t modelChoice = 0;
+
+// Decoded bytes
+byte byteCount = 0;
+byte bytes[32];
+
+
 void setup(void) {
+
   Serial.begin(9600);
   delay(1000);
-  Serial.println(F("Ready to decode IR!\n\n"));
+  Serial.println(F("Select model to decode (this affects the IR signal timings detection):"));
+  Serial.println(F("* '1' for Panasonic DKE>, Mitsubishi, Fujitsu etc. codes"));
+  Serial.println(F("* '2' for Panasonic CKP, Midea etc. codes"));
+  Serial.println(F("* '3' for entering the bit sequence on the serial monitor (instead of the IR receiver)"));
+  Serial.println();
+  Serial.print(F("Enter choice: "));
+
+  while (modelChoice == 0) {
+    int selection = Serial.read();
+
+    if ( selection != -1 ) {
+      Serial.print((char)selection);
+
+      switch ((char)selection) {
+        case '1':
+          modelChoice = 1;
+          break;
+        case '2':
+          modelChoice = 2;
+          break;
+        case '3':
+          modelChoice = 3;
+          break;
+      }
+    }
+  }
+
+  Serial.print(F("\n\nReady to decode IR for choice '"));
+  Serial.print(modelChoice);
+  Serial.println(F("'\n\n"));
+
+  if (modelChoice == 1) {
+    MARK_THRESHOLD_BIT_HEADER    = 2000;
+    SPACE_THRESHOLD_ZERO_ONE     =  800;
+    SPACE_THRESHOLD_ONE_HEADER   = 1500;
+    SPACE_THRESHOLD_HEADER_PAUSE = 8000;
+  } else if (modelChoice == 2) {
+    MARK_THRESHOLD_BIT_HEADER    = 2000;
+    SPACE_THRESHOLD_ZERO_ONE     = 1800;
+    SPACE_THRESHOLD_ONE_HEADER   = 3200;
+    SPACE_THRESHOLD_HEADER_PAUSE = 8000;
+  }
 }
 
 void loop(void) {
   char incoming = 0;
 
-mark_header_avg = 0;
-mark_header_cnt = 0;
-mark_bit_avg = 0;
-mark_bit_cnt = 0;
-space_zero_avg = 0;
-space_zero_cnt = 0;
-space_one_avg = 0;
-space_one_cnt = 0;
-space_header_avg = 0;
-space_header_cnt = 0;
-space_pause_avg = 0;
-space_pause_cnt = 0;
+  memset(symbols, sizeof(symbols), 0);
+  memset(bytes, sizeof(bytes), 0);
+
+  // Initialize the averages every time
+  mark_header_avg = 0;
+  mark_header_cnt = 0;
+  mark_bit_avg = 0;
+  mark_bit_cnt = 0;
+  space_zero_avg = 0;
+  space_zero_cnt = 0;
+  space_one_avg = 0;
+  space_one_cnt = 0;
+  space_header_avg = 0;
+  space_header_cnt = 0;
+  space_pause_avg = 0;
+  space_pause_cnt = 0;
 
   // Only Panasonic seems to use the pause
   space_pause_avg = 0;
   space_pause_cnt = 0;
 
   currentpulse=0;
-  receivepulses();
-  printpulses();
+  byteCount=0;
+  if (modelChoice != 3) {
+    receivePulses();
+  } else {
+    while ((currentpulse = Serial.readBytesUntil('\n', symbols+1, sizeof(symbols)-1)) == 0) {}
+    currentpulse++;
+  }
+
+  printPulses();
+  decodeProtocols();
 }
 
-void receivepulses(void) {
+void receivePulses(void) {
   uint16_t highpulse, lowpulse;  // temporary storage timing
 
   while (currentpulse < sizeof(symbols))
@@ -217,33 +229,20 @@ void receivepulses(void) {
   }
 }
 
-void printpulses(void) {
+void printPulses(void) {
 
   int bitCount = 0;
   byte currentByte = 0;
-  byte byteCount = 0;
-  byte bytes[32];
 
-  Serial.print("Number of symbols: ");
+  Serial.print("\nNumber of symbols: ");
   Serial.println(currentpulse);
 
+  // Print the symbols (0, 1, H, h, W)
   Serial.println("Symbols:");
   Serial.println(symbols+1);
 
-  Serial.println("Timings (in us): ");
-  Serial.print("PAUSE SPACE:  ");
-  Serial.println(space_pause_avg);
-  Serial.print("HEADER MARK:  ");
-  Serial.println(mark_header_avg);
-  Serial.print("HEADER SPACE: ");
-  Serial.println(space_header_avg);
-  Serial.print("BIT MARK:     ");
-  Serial.println(mark_bit_avg);
-  Serial.print("ZERO SPACE:   ");
-  Serial.println(space_zero_avg);
-  Serial.print("ONE SPACE:    ");
-  Serial.println(space_one_avg);
-
+  // Print the decoded bytes
+  Serial.println("Bytes:");
 
   // Decode the string of bits to a byte array
   for (int i = 0; i < currentpulse; i++) {
@@ -277,468 +276,33 @@ void printpulses(void) {
   }
   Serial.println();
 
-  // If this looks like a Mitsubishi FD-25 or FE code...
-  if ( byteCount == 36 && bytes[0] == 0x23 && (memcmp(bytes, bytes+18, 17) == 0)) {
-    Serial.println("Looks like a Mitsubishi FD / FE series protocol");
-
-    // Check if the checksum matches
-    byte checksum = 0;
-
-    for (int i=0; i<17; i++) {
-      checksum += bytes[i];
-    }
-
-    if (checksum == bytes[17]) {
-      Serial.println("Checksum matches");
-    } else {
-      Serial.println("Checksum does not match");
-    }
-
-    // Power mode
-    switch (bytes[5]) {
-      case 0x00:
-        Serial.println("POWER OFF");
-        break;
-      case 0x20:
-        Serial.println("POWER ON");
-        break;
-      default:
-        Serial.println("POWER unknown");
-        break;
-    }
-
-    // Operating mode
-    switch (bytes[6] & 0x38) { // 0b00111000
-      case 0x38:
-        Serial.println("MODE FAN");
-        break;
-      case 0x20:
-        Serial.println("MODE AUTO");
-        break;
-      case 0x08:
-        if (bytes[15] == 0x20) {
-          Serial.println("MODE MAINTENANCE HEAT (FE only)");
-        } else {
-          Serial.println("MODE HEAT");
-        }
-        break;
-      case 0x18:
-        Serial.println("MODE COOL");
-        break;
-      case 0x10:
-        Serial.println("MODE DRY");
-        break;
-      default:
-        Serial.println("MODE unknown");
-        break;
-    }
-
-    // I-See
-    switch (bytes[6] & 0x40) { // 0b01000000
-      case 0x40:
-        Serial.println("I-See: ON");
-        break;
-      case 0x00:
-        Serial.println("I-See: OFF");
-        break;
-    }
-
-    // Plasma
-    switch (bytes[15] & 0x40) { // 0b01000000
-      case 0x40:
-        Serial.println("Plasma: ON");
-        break;
-      case 0x00:
-        Serial.println("Plasma: OFF");
-        break;
-    }
-
-    // Temperature
-    Serial.print("Temperature: ");
-    if (bytes[7] == 0x00) {
-      Serial.println("10");
-    } else {
-      Serial.println(bytes[7] + 16);
-    }
-
-    // Fan speed
-    switch (bytes[9] & 0x07) { // 0b00000111
-      case 0x00:
-        Serial.println("FAN AUTO");
-        break;
-      case 0x01:
-        Serial.println("FAN 1");
-        break;
-      case 0x02:
-        Serial.println("FAN 2");
-        break;
-      case 0x03:
-        Serial.println("FAN 3");
-        break;
-      case 0x04:
-        Serial.println("FAN 4");
-        break;
-      default:
-        Serial.println("FAN unknown");
-        break;
-    }
-
-    // Vertical air direction
-    switch (bytes[9] & 0xF8) { // 0b11111000
-      case 0x40: // 0b01000
-        Serial.println("VANE: AUTO1?");
-        break;
-      case 0x48: // 0b01001
-        Serial.println("VANE: UP");
-        break;
-      case 0x50: // 0b01010
-        Serial.println("VANE: UP-1");
-        break;
-      case 0x58: // 0b01011
-        Serial.println("VANE: UP-2");
-        break;
-      case 0x60: // 0b01100
-        Serial.println("VANE: UP-3");
-        break;
-      case 0x68: // 0b01101
-        Serial.println("VANE: DOWN");
-        break;
-      case 0x78: // 0b01111
-        Serial.println("VANE: SWING");
-        break;
-      case 0x80: // 0b10000
-        Serial.println("VANE: AUTO2?");
-        break;
-      case 0xB8: // 0b10111
-        Serial.println("VANE: AUTO3?");
-        break;
-      default:
-        Serial.println("VANE: unknown");
-        break;
-    }
-
-    // Horizontal air direction
-    switch (bytes[8] & 0xF0) { // 0b11110000
-      case 0x10:
-        Serial.println("WIDE VANE: LEFT");
-        break;
-      case 0x20:
-        Serial.println("WIDE VANE: MIDDLE LEFT");
-        break;
-      case 0x30:
-        Serial.println("WIDE VANE: MIDDLE");
-        break;
-      case 0x40:
-        Serial.println("WIDE VANE: MIDDLE RIGHT");
-        break;
-      case 0x50:
-        Serial.println("WIDE VANE: RIGHT");
-        break;
-      case 0xC0:
-        Serial.println("WIDE VANE: SWING");
-        break;
-      default:
-        Serial.println("WIDE VANE: unknown");
-        break;
-    }
-  }
-
-  // If this looks like a Carrier code...
-  if ( byteCount == 18 && bytes[0] == 0x4F && bytes[1] == 0xB0 && (memcmp(bytes, bytes+9, 9) == 0)) {
-    Serial.println("Looks like a Carrier protocol");
-
-    // Check if the checksum matches
-    byte checksum = 0;
-
-    checksum = bitReverse(bytes[0]) +
-               bitReverse(bytes[1]) +
-               bitReverse(bytes[2]) +
-               bitReverse(bytes[3]) +
-               bitReverse(bytes[4]) +
-               bitReverse(bytes[5]) +
-               bitReverse(bytes[6]) +
-               bitReverse(bytes[7]);
-
-    switch (bytes[6] & 0x0F) {
-      case 0x00:
-        Serial.println("FAN: AUTO");
-        break;
-      case 0x02:
-        Serial.println("FAN: 1");
-        break;
-      case 0x06:
-        Serial.println("FAN: 2");
-        break;
-      case 0x01:
-        Serial.println("FAN: 3");
-        break;
-      case 0x05:
-        Serial.println("FAN: 4");
-        break;
-      case 0x03:
-        Serial.println("FAN: 5");
-        break;
-    }
-
-    switch (bytes[6] & 0xF0) {
-      case 0xE0:
-        Serial.println("MODE: OFF");
-        break;
-      case 0x00:
-        Serial.println("MODE: AUTO");
-        checksum += 0x02;
-        switch (bytes[6] & 0x0F) {
-          case 0x02: // FAN1
-          case 0x03: // FAN5
-          case 0x06: // FAN2
-            checksum += 0x80;
-            break;
-        }
-        break;
-      case 0x80:
-        Serial.println("MODE: COOL");
-        break;
-      case 0x40:
-        Serial.println("MODE: DRY");
-        checksum += 0x02;
-        break;
-      case 0xC0:
-        Serial.println("MODE: HEAT");
-        switch (bytes[6] & 0x0F) {
-          case 0x05: // FAN4
-          case 0x06: // FAN2
-            checksum += 0xC0;
-            break;
-        }
-        break;
-      case 0x20:
-        Serial.println("MODE: FAN");
-        checksum += 0x02;
-        switch (bytes[6] & 0x0F) {
-          case 0x02: // FAN1
-          case 0x03: // FAN5
-          case 0x06: // FAN2
-            checksum += 0x80;
-            break;
-        }
-        break;
-    }
-
-    checksum = bitReverse(checksum);
-
-    const byte temperatures[]  = { 17, 25, 21, 29, 19, 27, 23, 00, 18, 26, 22, 30, 20, 28, 24 };
-
-
-    Serial.print("Temperature: ");
-    Serial.println(temperatures[bytes[5]]);
-
-    char bin1[9];
-    char bin2[9];
-    char bin3[9];
-
-    snprintf(bin1, sizeof(bin1), BYTETOBINARYPATTERN, BYTETOBINARY(checksum));
-    snprintf(bin2, sizeof(bin2), BYTETOBINARYPATTERN, BYTETOBINARY(bytes[8]));
-    snprintf(bin3, sizeof(bin3), BYTETOBINARYPATTERN, BYTETOBINARY(bytes[6]));
-
-
-    Serial.print("ModeFan  ");
-    Serial.println(bin3);
-
-
-    Serial.print("Checksum ");
-    Serial.print(bin1);
-
-    if (checksum == bytes[8]) {
-      Serial.println(" matches");
-    } else {
-      Serial.println(" does not match real");
-      Serial.print("checksum ");
-      Serial.println(bin2);
-    }
-
-  }
-
-  // If this looks like a Sharp code...
-  if ( byteCount == 13 && bytes[0] == 0xAA && bytes[1] == 0x5A && bytes[2] == 0xCF ) {
-    Serial.println("Looks like a Sharp protocol");
-
-    // Power mode
-    switch (bytes[5]) {
-      case 0x21:
-        Serial.println("POWER OFF");
-        break;
-      case 0x31:
-        Serial.println("POWER ON");
-        break;
-    }
-
-    // Operating mode
-    switch (bytes[6] & 0x0F) {
-      case 0x01:
-        if (bytes[4] == 0x00) {
-          Serial.println("MODE MAINTENANCE HEAT");
-        } else {
-          Serial.println("MODE HEAT");
-        }
-        break;
-      case 0x02:
-        Serial.println("MODE COOL");
-        break;
-      case 0x03:
-        Serial.println("MODE DRY");
-        break;
-    }
-
-    // Temperature
-    Serial.print("Temperature: ");
-    if (bytes[4] == 0x00) {
-      Serial.println("10");
-    } else {
-      Serial.println(bytes[4] + 17);
-    }
-
-    switch (bytes[6] & 0xF0) {
-      case 0x20:
-        Serial.println("FAN: AUTO");
-        break;
-      case 0x30:
-        Serial.println("FAN: 1");
-        break;
-      case 0x50:
-        Serial.println("FAN: 2");
-        break;
-      case 0x70:
-        Serial.println("FAN: 3");
-        break;
-    }
-
-    // Check if the checksum matches
-    byte checksum = 0x00;
-
-    for (byte i = 0; i < 12; i++) {
-      checksum ^= bytes[i];
-    }
-
-    checksum ^= bytes[12] & 0x0F;
-    checksum ^= (checksum >> 4);
-    checksum &= 0x0F;
-
-    Serial.print("Checksum '0x");
-    Serial.print(checksum, HEX);
-
-    if ( ((bytes[12] & 0xF0) >> 4) == checksum ) {
-      Serial.println("' matches");
-    } else {
-      Serial.print(" does not match ");
-      Serial.println(((bytes[12] & 0xF0) >> 4), HEX);
-    }
-  }
-
-  // If this looks like a Daikin code...
-  if ( byteCount == 35 && bytes[0] == 0x11 && bytes[1] == 0xDA && bytes[2] == 0x27 ) {
-    Serial.println("Looks like a Daikin protocol");
-
-    // Power mode
-    switch (bytes[21] & 0x01) {
-      case 0x00:
-        Serial.println("POWER OFF");
-        break;
-      case 0x01:
-        Serial.println("POWER ON");
-        break;
-    }
-
-    // Operating mode
-    switch (bytes[21] & 0x70) {
-      case 0x00:
-        Serial.println("MODE AUTO");
-        break;
-      case 0x40:
-        Serial.println("MODE HEAT");
-        break;
-      case 0x30:
-        Serial.println("MODE COOL");
-        break;
-      case 0x20:
-        Serial.println("MODE DRY");
-        break;
-      case 0x60:
-        Serial.println("MODE FAN");
-        break;
-      }
-
-    // Temperature
-    Serial.print("Temperature: ");
-    Serial.println(bytes[22] / 2);
-
-    // Fan speed
-    switch (bytes[24] & 0xF0) {
-      case 0xA0:
-        Serial.println("FAN: AUTO");
-        break;
-      case 0x30:
-        Serial.println("FAN: 1");
-        break;
-      case 0x40:
-        Serial.println("FAN: 2");
-        break;
-      case 0x50:
-        Serial.println("FAN: 3");
-        break;
-      case 0x60:
-        Serial.println("FAN: 4");
-        break;
-      case 0x70:
-        Serial.println("FAN: 5");
-        break;
-    }
-
-    // Check if the checksum matches
-    byte checksum = 0x00;
-
-    for (byte i = 0; i < 7; i++) {
-      checksum += bytes[i];
-    }
-
-    if ( bytes[7] == checksum ) {
-      Serial.println("Checksum 1 matches");
-    } else {
-      Serial.println("Checksum 1 does not match");
-    }
-
-    checksum = 0x00;
-
-    for (byte i = 8; i < 15; i++) {
-      checksum += bytes[i];
-    }
-
-    if ( bytes[15] == checksum ) {
-      Serial.println("Checksum 2 matches");
-    } else {
-      Serial.println("Checksum 2 does not match");
-    }
-
-    checksum = 0x00;
-
-    for (byte i = 16; i < 34; i++) {
-      checksum += bytes[i];
-    }
-
-    if ( bytes[34] == checksum ) {
-      Serial.println("Checksum 3 matches");
-    } else {
-      Serial.println("Checksum 3 does not match");
-    }
-  }
+  // Print the timing constants
+  Serial.println("Timings (in us): ");
+  Serial.print("PAUSE SPACE:  ");
+  Serial.println(space_pause_avg);
+  Serial.print("HEADER MARK:  ");
+  Serial.println(mark_header_avg);
+  Serial.print("HEADER SPACE: ");
+  Serial.println(space_header_avg);
+  Serial.print("BIT MARK:     ");
+  Serial.println(mark_bit_avg);
+  Serial.print("ZERO SPACE:   ");
+  Serial.println(space_zero_avg);
+  Serial.print("ONE SPACE:    ");
+  Serial.println(space_one_avg);
 }
 
-byte bitReverse(byte x)
+void decodeProtocols()
 {
-  //          01010101  |         10101010
-  x = ((x >> 1) & 0x55) | ((x << 1) & 0xaa);
-  //          00110011  |         11001100
-  x = ((x >> 2) & 0x33) | ((x << 2) & 0xcc);
-  //          00001111  |         11110000
-  x = ((x >> 4) & 0x0f) | ((x << 4) & 0xf0);
-  return x;
+  Serial.println("Decoding known protocols...");
+
+  if ( ! (decodeMitsubishiElectric(bytes, byteCount) ||
+          decodeMitsubishiHeavy(bytes, byteCount) ||
+          decodeSharp(bytes, byteCount) ||
+          decodeDaikin(bytes, byteCount) ||
+          decodeCarrier(bytes, byteCount) ||
+          decodePanasonicCKP(bytes, byteCount) ) )
+  {
+    Serial.println(F("Unknown protocol"));
+  }
 }
