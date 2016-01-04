@@ -78,9 +78,10 @@ void setup(void) {
   Serial.begin(9600);
   delay(1000);
   Serial.println(F("Select model to decode (this affects the IR signal timings detection):"));
-  Serial.println(F("* '1' for Panasonic DKE>, Mitsubishi, Fujitsu etc. codes"));
+  Serial.println(F("* '1' for Panasonic DKE>, Mitsubishi Electric, Fujitsu etc. codes"));
   Serial.println(F("* '2' for Panasonic CKP, Midea etc. codes"));
-  Serial.println(F("* '3' for entering the bit sequence on the serial monitor (instead of the IR receiver)"));
+  Serial.println(F("* '3' for Mitsubishi Heavy etc. codes"));
+  Serial.println(F("* '9' for entering the bit sequence on the serial monitor (instead of the IR receiver)"));
   Serial.println();
   Serial.print(F("Enter choice: "));
 
@@ -100,7 +101,10 @@ void setup(void) {
         case '3':
           modelChoice = 3;
           break;
-      }
+        case '9':
+          modelChoice = 9;
+          break;
+          }
     }
   }
 
@@ -118,14 +122,19 @@ void setup(void) {
     SPACE_THRESHOLD_ZERO_ONE     = 1800;
     SPACE_THRESHOLD_ONE_HEADER   = 3200;
     SPACE_THRESHOLD_HEADER_PAUSE = 8000;
+  } else if (modelChoice == 3) {
+    MARK_THRESHOLD_BIT_HEADER    = 2000;
+    SPACE_THRESHOLD_ZERO_ONE     =  800;
+    SPACE_THRESHOLD_ONE_HEADER   = 1400;
+    SPACE_THRESHOLD_HEADER_PAUSE = 8000;
   }
 }
 
 void loop(void) {
   char incoming = 0;
 
-  memset(symbols, sizeof(symbols), 0);
-  memset(bytes, sizeof(bytes), 0);
+  memset(symbols, 0, sizeof(symbols));
+  memset(bytes, 0, sizeof(bytes));
 
   // Initialize the averages every time
   mark_header_avg = 0;
@@ -147,7 +156,7 @@ void loop(void) {
 
   currentpulse=0;
   byteCount=0;
-  if (modelChoice != 3) {
+  if (modelChoice != 9) {
     receivePulses();
   } else {
     while ((currentpulse = Serial.readBytesUntil('\n', symbols+1, sizeof(symbols)-1)) == 0) {}
