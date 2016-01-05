@@ -4,15 +4,15 @@ bool decodeSharp(byte *bytes, int byteCount)
 {
   // If this looks like a Sharp code...
   if ( byteCount == 13 && bytes[0] == 0xAA && bytes[1] == 0x5A && bytes[2] == 0xCF ) {
-    Serial.println("Looks like a Sharp protocol");
+    Serial.println(F("Looks like a Sharp protocol"));
 
     // Power mode
     switch (bytes[5]) {
       case 0x21:
-        Serial.println("POWER OFF");
+        Serial.println(F("POWER OFF"));
         break;
       case 0x31:
-        Serial.println("POWER ON");
+        Serial.println(F("POWER ON"));
         break;
     }
 
@@ -20,39 +20,39 @@ bool decodeSharp(byte *bytes, int byteCount)
     switch (bytes[6] & 0x0F) {
       case 0x01:
         if (bytes[4] == 0x00) {
-          Serial.println("MODE MAINTENANCE HEAT");
+          Serial.println(F("MODE MAINTENANCE HEAT"));
         } else {
-          Serial.println("MODE HEAT");
+          Serial.println(F("MODE HEAT"));
         }
         break;
       case 0x02:
-        Serial.println("MODE COOL");
+        Serial.println(F("MODE COOL"));
         break;
       case 0x03:
-        Serial.println("MODE DRY");
+        Serial.println(F("MODE DRY"));
         break;
     }
 
     // Temperature
-    Serial.print("Temperature: ");
+    Serial.print(F("Temperature: "));
     if (bytes[4] == 0x00) {
-      Serial.println("10");
+      Serial.println(F("10"));
     } else {
       Serial.println(bytes[4] + 17);
     }
 
     switch (bytes[6] & 0xF0) {
       case 0x20:
-        Serial.println("FAN: AUTO");
+        Serial.println(F("FAN: AUTO"));
         break;
       case 0x30:
-        Serial.println("FAN: 1");
+        Serial.println(F("FAN: 1"));
         break;
       case 0x50:
-        Serial.println("FAN: 2");
+        Serial.println(F("FAN: 2"));
         break;
       case 0x70:
-        Serial.println("FAN: 3");
+        Serial.println(F("FAN: 3"));
         break;
     }
 
@@ -67,13 +67,13 @@ bool decodeSharp(byte *bytes, int byteCount)
     checksum ^= (checksum >> 4);
     checksum &= 0x0F;
 
-    Serial.print("Checksum '0x");
+    Serial.print(F("Checksum '0x"));
     Serial.print(checksum, HEX);
 
     if ( ((bytes[12] & 0xF0) >> 4) == checksum ) {
-      Serial.println("' matches");
+      Serial.println(F("' matches"));
     } else {
-      Serial.print(" does not match ");
+      Serial.print(F(" does not match "));
       Serial.println(((bytes[12] & 0xF0) >> 4), HEX);
     }
     return true;

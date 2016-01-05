@@ -28,7 +28,7 @@ bool decodeCarrier(byte *bytes, int byteCount)
 {
   // If this looks like a Carrier code...
   if ( byteCount == 18 && bytes[0] == 0x4F && bytes[1] == 0xB0 && (memcmp(bytes, bytes+9, 9) == 0)) {
-    Serial.println("Looks like a Carrier protocol");
+    Serial.println(F("Looks like a Carrier protocol"));
 
     // Check if the checksum matches
     byte checksum = 0;
@@ -44,31 +44,31 @@ bool decodeCarrier(byte *bytes, int byteCount)
 
     switch (bytes[6] & 0x0F) {
       case 0x00:
-        Serial.println("FAN: AUTO");
+        Serial.println(F("FAN: AUTO"));
         break;
       case 0x02:
-        Serial.println("FAN: 1");
+        Serial.println(F("FAN: 1"));
         break;
       case 0x06:
-        Serial.println("FAN: 2");
+        Serial.println(F("FAN: 2"));
         break;
       case 0x01:
-        Serial.println("FAN: 3");
+        Serial.println(F("FAN: 3"));
         break;
       case 0x05:
-        Serial.println("FAN: 4");
+        Serial.println(F("FAN: 4"));
         break;
       case 0x03:
-        Serial.println("FAN: 5");
+        Serial.println(F("FAN: 5"));
         break;
     }
 
     switch (bytes[6] & 0xF0) {
       case 0xE0:
-        Serial.println("MODE: OFF");
+        Serial.println(F("MODE: OFF"));
         break;
       case 0x00:
-        Serial.println("MODE: AUTO");
+        Serial.println(F("MODE: AUTO"));
         checksum += 0x02;
         switch (bytes[6] & 0x0F) {
           case 0x02: // FAN1
@@ -79,14 +79,14 @@ bool decodeCarrier(byte *bytes, int byteCount)
         }
         break;
       case 0x80:
-        Serial.println("MODE: COOL");
+        Serial.println(F("MODE: COOL"));
         break;
       case 0x40:
-        Serial.println("MODE: DRY");
+        Serial.println(F("MODE: DRY"));
         checksum += 0x02;
         break;
       case 0xC0:
-        Serial.println("MODE: HEAT");
+        Serial.println(F("MODE: HEAT"));
         switch (bytes[6] & 0x0F) {
           case 0x05: // FAN4
           case 0x06: // FAN2
@@ -95,7 +95,7 @@ bool decodeCarrier(byte *bytes, int byteCount)
         }
         break;
       case 0x20:
-        Serial.println("MODE: FAN");
+        Serial.println(F("MODE: FAN"));
         checksum += 0x02;
         switch (bytes[6] & 0x0F) {
           case 0x02: // FAN1
@@ -112,7 +112,7 @@ bool decodeCarrier(byte *bytes, int byteCount)
     const byte temperatures[]  = { 17, 25, 21, 29, 19, 27, 23, 00, 18, 26, 22, 30, 20, 28, 24 };
 
 
-    Serial.print("Temperature: ");
+    Serial.print(F("Temperature: "));
     Serial.println(temperatures[bytes[5]]);
 
     char bin1[9];
@@ -124,18 +124,18 @@ bool decodeCarrier(byte *bytes, int byteCount)
     snprintf(bin3, sizeof(bin3), BYTETOBINARYPATTERN, BYTETOBINARY(bytes[6]));
 
 
-    Serial.print("ModeFan  ");
+    Serial.print(F("ModeFan  "));
     Serial.println(bin3);
 
 
-    Serial.print("Checksum ");
+    Serial.print(F("Checksum "));
     Serial.print(bin1);
 
     if (checksum == bytes[8]) {
-      Serial.println(" matches");
+      Serial.println(F(" matches"));
     } else {
-      Serial.println(" does not match real");
-      Serial.print("checksum ");
+      Serial.println(F(" does not match real"));
+      Serial.print(F("checksum "));
       Serial.println(bin2);
     }
     return true;

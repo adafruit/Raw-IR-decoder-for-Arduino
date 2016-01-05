@@ -43,10 +43,10 @@ bool decodePanasonicCKP(byte *bytes, int byteCount);
 uint16_t RESOLUTION=20;
 
 // The thresholds for different symbols
-int MARK_THRESHOLD_BIT_HEADER    = 0; // Value between BIT MARK and HEADER MARK
-int SPACE_THRESHOLD_ZERO_ONE     = 0; // Value between ZERO SPACE and ONE SPACE
-int SPACE_THRESHOLD_ONE_HEADER   = 0; // Value between ONE SPACE and HEADER SPACE
-int SPACE_THRESHOLD_HEADER_PAUSE = 0; // Value between HEADER SPACE and PAUSE SPACE (Panasonic/Midea only)
+uint16_t MARK_THRESHOLD_BIT_HEADER    = 0; // Value between BIT MARK and HEADER MARK
+uint16_t SPACE_THRESHOLD_ZERO_ONE     = 0; // Value between ZERO SPACE and ONE SPACE
+uint16_t SPACE_THRESHOLD_ONE_HEADER   = 0; // Value between ONE SPACE and HEADER SPACE
+uint16_t SPACE_THRESHOLD_HEADER_PAUSE = 0; // Value between HEADER SPACE and PAUSE SPACE (Panasonic/Midea only)
 
 
 uint32_t mark_header_avg = 0;
@@ -131,10 +131,25 @@ void setup(void) {
 }
 
 void loop(void) {
-  char incoming = 0;
 
   memset(symbols, 0, sizeof(symbols));
   memset(bytes, 0, sizeof(bytes));
+
+  currentpulse=0;
+  byteCount=0;
+  if (modelChoice != 9) {
+    receivePulses();
+  } else {
+    while ((currentpulse = Serial.readBytesUntil('\n', symbols+1, sizeof(symbols)-1)) == 0) {}
+    currentpulse++;
+  }
+
+  printPulses();
+  decodeProtocols();
+}
+
+void receivePulses(void) {
+  uint16_t highpulse, lowpulse;  // temporary storage timing
 
   // Initialize the averages every time
   mark_header_avg = 0;
@@ -153,22 +168,6 @@ void loop(void) {
   // Only Panasonic seems to use the pause
   space_pause_avg = 0;
   space_pause_cnt = 0;
-
-  currentpulse=0;
-  byteCount=0;
-  if (modelChoice != 9) {
-    receivePulses();
-  } else {
-    while ((currentpulse = Serial.readBytesUntil('\n', symbols+1, sizeof(symbols)-1)) == 0) {}
-    currentpulse++;
-  }
-
-  printPulses();
-  decodeProtocols();
-}
-
-void receivePulses(void) {
-  uint16_t highpulse, lowpulse;  // temporary storage timing
 
   while (currentpulse < sizeof(symbols))
   {
@@ -243,18 +242,18 @@ void printPulses(void) {
   int bitCount = 0;
   byte currentByte = 0;
 
-  Serial.print("\nNumber of symbols: ");
+  Serial.print(F("\nNumber of symbols: "));
   Serial.println(currentpulse);
 
   // Print the symbols (0, 1, H, h, W)
-  Serial.println("Symbols:");
+  Serial.println(F("Symbols:"));
   Serial.println(symbols+1);
 
   // Print the decoded bytes
-  Serial.println("Bytes:");
+  Serial.println(F("Bytes:"));
 
   // Decode the string of bits to a byte array
-  for (int i = 0; i < currentpulse; i++) {
+  for (uint16_t i = 0; i < currentpulse; i++) {
     if (symbols[i] == '0' || symbols[i] == '1') {
       currentByte >>= 1;
       bitCount++;
@@ -276,34 +275,34 @@ void printPulses(void) {
   // Print the byte array
   for (int i = 0; i < byteCount; i++) {
     if (bytes[i] < 0x10) {
-      Serial.print("0");
+      Serial.print(F("0"));
     }
     Serial.print(bytes[i],HEX);
     if ( i < byteCount - 1 ) {
-      Serial.print(",");
+      Serial.print(F(","));
     }
   }
   Serial.println();
 
   // Print the timing constants
-  Serial.println("Timings (in us): ");
-  Serial.print("PAUSE SPACE:  ");
+  Serial.println(F("Timings (in us): "));
+  Serial.print(F("PAUSE SPACE:  "));
   Serial.println(space_pause_avg);
-  Serial.print("HEADER MARK:  ");
+  Serial.print(F("HEADER MARK:  "));
   Serial.println(mark_header_avg);
-  Serial.print("HEADER SPACE: ");
+  Serial.print(F("HEADER SPACE: "));
   Serial.println(space_header_avg);
-  Serial.print("BIT MARK:     ");
+  Serial.print(F("BIT MARK:     "));
   Serial.println(mark_bit_avg);
-  Serial.print("ZERO SPACE:   ");
+  Serial.print(F("ZERO SPACE:   "));
   Serial.println(space_zero_avg);
-  Serial.print("ONE SPACE:    ");
+  Serial.print(F("ONE SPACE:    "));
   Serial.println(space_one_avg);
 }
 
 void decodeProtocols()
 {
-  Serial.println("Decoding known protocols...");
+  Serial.println(F("Decoding known protocols..."));
 
   if ( ! (decodeMitsubishiElectric(bytes, byteCount) ||
           decodeMitsubishiHeavy(bytes, byteCount) ||

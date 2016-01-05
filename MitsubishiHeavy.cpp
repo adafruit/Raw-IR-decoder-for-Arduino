@@ -4,60 +4,60 @@ bool decodeMitsubishiHeavy(byte *bytes, int byteCount)
 {
   // If this looks like a Mitsubishi Heavy...
   if ( byteCount == 11 && bytes[0] == 0x52 && bytes[1] == 0xAE && bytes[2] == 0xC3 && bytes[3] == 0x26) {
-    Serial.println("Looks like a Mitsubishi Heavy protocol");
+    Serial.println(F("Looks like a Mitsubishi Heavy protocol"));
 
      // Power mode
     switch (bytes[9] & 0x08) {
       case 0x00:
-        Serial.println("POWER ON");
+        Serial.println(F("POWER ON"));
         break;
       case 0x08:
-        Serial.println("POWER OFF");
+        Serial.println(F("POWER OFF"));
         break;
     }
 
     // Operating mode
     switch (bytes[9] & 0x07) {
       case 0x07:
-        Serial.println("MODE AUTO");
+        Serial.println(F("MODE AUTO"));
         break;
       case 0x03:
-        Serial.println("MODE HEAT");
+        Serial.println(F("MODE HEAT"));
         break;
       case 0x06:
-        Serial.println("MODE COOL");
+        Serial.println(F("MODE COOL"));
         break;
       case 0x05:
-        Serial.println("MODE DRY");
+        Serial.println(F("MODE DRY"));
         break;
       case 0x04:
-        Serial.println("MODE FAN");
+        Serial.println(F("MODE FAN"));
         break;
     }
 
     // Temperature
-    Serial.print("Temperature: ");
+    Serial.print(F("Temperature: "));
     Serial.println((~((bytes[9] & 0xF0) >> 4) & 0x0F) + 17);
 
     // Fan speed
     switch (bytes[7] & 0xE0) {
       case 0xE0:
-        Serial.println("FAN AUTO");
+        Serial.println(F("FAN AUTO"));
         break;
       case 0xA0:
-        Serial.println("FAN 1");
+        Serial.println(F("FAN 1"));
         break;
       case 0x80:
-        Serial.println("FAN 2");
+        Serial.println(F("FAN 2"));
         break;
       case 0x60:
-        Serial.println("FAN 3");
+        Serial.println(F("FAN 3"));
         break;
       case 0x20:
-        Serial.println("FAN HIGH SPEED");
+        Serial.println(F("FAN HIGH SPEED"));
         break;
       case 0x00:
-        Serial.println("FAN SILENT");
+        Serial.println(F("FAN SILENT"));
         break;
     }
 
