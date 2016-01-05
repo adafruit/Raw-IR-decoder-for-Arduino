@@ -30,7 +30,7 @@ bool decodeMitsubishiHeavy(byte *bytes, int byteCount)
       case 0x05:
         Serial.println("MODE DRY");
         break;
-      case 0x01:
+      case 0x04:
         Serial.println("MODE FAN");
         break;
     }
