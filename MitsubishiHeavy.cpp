@@ -61,6 +61,55 @@ bool decodeMitsubishiHeavy(byte *bytes, int byteCount)
         break;
     }
 
+    // Vertical air direction
+    Serial.print(F("Vertical air direction: "));
+    switch ((bytes[5] & 0b00000010) | (bytes[5] & 0b00011000)) {
+      case 0x0A:
+        Serial.println(F("AUTO"));
+        break;
+      case 0x02:
+        Serial.println(F("UP"));
+        break;
+      case 0x18:
+        Serial.println(F("MIDDLE UP"));
+        break;
+      case 0x10:
+        Serial.println(F("MIDDLE"));
+        break;
+      case 0x08:
+        Serial.println(F("MIDDLE DOWN"));
+        break;
+      case 0x00:
+        Serial.println(F("DOWN"));
+        break;
+      case 0x1A:
+        Serial.println(F("STOP"));
+        break;
+      }
+
+    // Horizontal air direction
+    Serial.print(F("Horizontal air direction: "));
+    switch (bytes[5] & 0b11001100) {
+      case 0x04:
+        Serial.println(F("AUTO"));
+        break;
+      case 0x48:
+        Serial.println(F("MIDDLE"));
+        break;
+      case 0xC8:
+        Serial.println(F("LEFT"));
+        break;
+      case 0x88:
+        Serial.println(F("MIDDLE LEFT"));
+        break;
+      case 0x08:
+        Serial.println(F("MIDDLE RIGHT"));
+        break;
+      case 0xC4:
+        Serial.println(F("RIGHT"));
+        break;
+      }
+
     return true;
   }
 
