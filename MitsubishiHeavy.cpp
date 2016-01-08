@@ -90,17 +90,14 @@ bool decodeMitsubishiHeavy(byte *bytes, int byteCount)
     // Horizontal air direction
     Serial.print(F("Horizontal air direction: "));
     switch (bytes[5] & 0b11001100) {
-      case 0x04:
-        Serial.println(F("AUTO"));
-        break;
-      case 0x48:
-        Serial.println(F("MIDDLE"));
-        break;
       case 0xC8:
         Serial.println(F("LEFT"));
         break;
       case 0x88:
         Serial.println(F("MIDDLE LEFT"));
+        break;   
+      case 0x48:
+        Serial.println(F("MIDDLE"));
         break;
       case 0x08:
         Serial.println(F("MIDDLE RIGHT"));
@@ -108,6 +105,21 @@ bool decodeMitsubishiHeavy(byte *bytes, int byteCount)
       case 0xC4:
         Serial.println(F("RIGHT"));
         break;
+      case 0x84:
+        Serial.println(F("LEFT RIGHT"));
+        break;  
+      case 0x44:
+        Serial.println(F("RIGHT LEFT"));
+        break;                                            
+      case 0x4C:
+        Serial.println(F("AUTO"));
+        break;
+      case 0xCC:
+        Serial.println(F("STOP"));
+        break;
+      case 0x04:
+        Serial.println(F("3D AUTO"));
+        break; 
       }
 
     return true;
