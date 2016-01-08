@@ -3,6 +3,7 @@
 bool decodeMitsubishiHeavy(byte *bytes, int byteCount)
 {
   // If this looks like a Mitsubishi Heavy...
+  // Model SRKxxZJ-S Remote Control RKX502A001C
   if ( byteCount == 11 && bytes[0] == 0x52 && bytes[1] == 0xAE && bytes[2] == 0xC3 && bytes[3] == 0x26) {
     Serial.println(F("Looks like a Mitsubishi Heavy protocol"));
 
@@ -54,10 +55,10 @@ bool decodeMitsubishiHeavy(byte *bytes, int byteCount)
         Serial.println(F("FAN 3"));
         break;
       case 0x20:
-        Serial.println(F("FAN HIGH SPEED"));
+        Serial.println(F("FAN HIGH SPEED/HI POWER MODE"));
         break;
       case 0x00:
-        Serial.println(F("FAN SILENT"));
+        Serial.println(F("FAN SILENT/ECONO MODE"));
         break;
     }
 
