@@ -90,7 +90,7 @@ bool decodeMitsubishiHeavy(byte *bytes, int byteCount)
     // Horizontal air direction
     Serial.print(F("Horizontal air direction: "));
     switch (bytes[5] & 0b11001100) {
-      case 0x04:
+      case 0x4C:
         Serial.println(F("AUTO"));
         break;
       case 0x48:
