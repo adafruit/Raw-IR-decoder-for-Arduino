@@ -240,8 +240,6 @@ void receivePulses(void) {
       mark_header_avg = (lowpulse + mark_header_cnt * mark_header_avg) / ++mark_header_cnt;
     } else {
       mark_bit_avg = (lowpulse + mark_bit_cnt * mark_bit_avg) / ++mark_bit_cnt;
-      symbols[currentpulse] = 'M';
-      currentpulse++;
     }
 
     // we read one high-low pulse successfully, continue!
