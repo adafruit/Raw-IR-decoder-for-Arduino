@@ -81,6 +81,7 @@ void setup(void) {
   Serial.println(F("* '1' for Panasonic DKE>, Mitsubishi Electric, Fujitsu etc. codes"));
   Serial.println(F("* '2' for Panasonic CKP, Midea etc. codes"));
   Serial.println(F("* '3' for Mitsubishi Heavy etc. codes"));
+  Serial.println(F("* '4' for Hyyndai etc. codes"));
   Serial.println(F("* '9' for entering the bit sequence on the serial monitor (instead of the IR receiver)"));
   Serial.println();
   Serial.print(F("Enter choice: "));
@@ -100,6 +101,9 @@ void setup(void) {
           break;
         case '3':
           modelChoice = 3;
+          break;
+        case '4':
+          modelChoice = 4;
           break;
         case '9':
           modelChoice = 9;
@@ -126,6 +130,11 @@ void setup(void) {
     MARK_THRESHOLD_BIT_HEADER    = 2000;
     SPACE_THRESHOLD_ZERO_ONE     =  800;
     SPACE_THRESHOLD_ONE_HEADER   = 1400;
+    SPACE_THRESHOLD_HEADER_PAUSE = 8000;
+  } else if (modelChoice == 4) {
+    MARK_THRESHOLD_BIT_HEADER    = 2000;
+    SPACE_THRESHOLD_ZERO_ONE     =  800;
+    SPACE_THRESHOLD_ONE_HEADER   = 2400;
     SPACE_THRESHOLD_HEADER_PAUSE = 8000;
   }
 }
@@ -231,6 +240,8 @@ void receivePulses(void) {
       mark_header_avg = (lowpulse + mark_header_cnt * mark_header_avg) / ++mark_header_cnt;
     } else {
       mark_bit_avg = (lowpulse + mark_bit_cnt * mark_bit_avg) / ++mark_bit_cnt;
+      symbols[currentpulse] = 'M';
+      currentpulse++;
     }
 
     // we read one high-low pulse successfully, continue!
