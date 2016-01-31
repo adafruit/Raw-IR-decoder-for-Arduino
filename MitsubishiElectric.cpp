@@ -3,8 +3,10 @@
 bool decodeMitsubishiElectric(byte *bytes, int byteCount)
 {
   // If this looks like a Mitsubishi FD-25 or FE code...
-  if ( byteCount == 36 && bytes[0] == 0x23 && (memcmp(bytes, bytes+18, 17) == 0)) {
-    Serial.println(F("Looks like a Mitsubishi FD / FE series protocol"));
+  if ( byteCount == 36 && bytes[0] == 0x23 &&
+       ( (memcmp(bytes, bytes+18, 17) == 0) ||
+         ((memcmp(bytes, bytes+18, 14) == 0) && bytes[32] == 0x24) ) ){
+    Serial.println(F("Looks like a Mitsubishi FD / FE / MSY series protocol"));
 
     // Check if the checksum matches
     byte checksum = 0;
