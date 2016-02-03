@@ -123,6 +123,17 @@ bool decodeMitsubishiHeavy(byte *bytes, int byteCount)
         break; 
       }
 
+    // Clean
+    Serial.print(F("Clean: "));
+    switch (bytes[5] & 0x20) {
+      case 0x00:
+        Serial.println(F("ON"));
+        break;
+      case 0x20:
+        Serial.println(F("OFF"));
+        break; 
+    } 
+
     return true;
   } else if ( byteCount == 19 && bytes[0] == 0x52 && bytes[1] == 0xAE && bytes[2] == 0xC3 && bytes[3] == 0x1A && bytes[4] == 0xE5) {
     Serial.println(F("Looks like a Mitsubishi Heavy ZM-S protocol"));
