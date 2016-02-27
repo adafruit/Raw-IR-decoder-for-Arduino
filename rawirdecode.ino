@@ -7,6 +7,8 @@ bool decodeSharp(byte *bytes, int byteCount);
 bool decodeCarrier(byte *bytes, int byteCount);
 bool decodePanasonicCKP(byte *bytes, int byteCount);
 bool decodeHyundai(byte *bytes, int pulseCount);
+bool decodeFuego(byte *bytes, int byteCount);
+
 
 /* Raw IR decoder sketch!
 
@@ -320,7 +322,8 @@ void decodeProtocols()
           decodeDaikin(bytes, byteCount) ||
           decodeCarrier(bytes, byteCount) ||
           decodePanasonicCKP(bytes, byteCount) ||
-          decodeHyundai(bytes, currentpulse)) )
+          decodeHyundai(bytes, currentpulse) ||
+          decodeFuego(bytes, byteCount) ))
   {
     Serial.println(F("Unknown protocol"));
   }
