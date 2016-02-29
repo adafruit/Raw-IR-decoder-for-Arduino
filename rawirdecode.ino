@@ -208,7 +208,7 @@ void receivePulses(void) {
         symbols[currentpulse] = 'W';
         // Cumulative moving average, see http://en.wikipedia.org/wiki/Moving_average#Cumulative_moving_average
         space_pause_avg = (highpulse + space_pause_cnt * space_pause_avg) / ++space_pause_cnt;
-      } else if ( highpulse > SPACE_THRESHOLD_ONE_HEADER ) {
+      } else if ( (currentpulse > 0 && symbols[currentpulse-1] == 'H') || highpulse > SPACE_THRESHOLD_ONE_HEADER ) {
         symbols[currentpulse] = 'h';
         // Cumulative moving average, see http://en.wikipedia.org/wiki/Moving_average#Cumulative_moving_average
         space_header_avg = (highpulse + space_header_cnt * space_header_avg) / ++space_header_cnt;

@@ -13,11 +13,9 @@ bool decodeFuego(byte *bytes, int byteCount)
     // Check if the checksum matches
     byte checksum = 0;
 
-    for (int i=0; i<14; i++) {
+    for (int i=0; i<13; i++) {
       checksum += bytes[i];
     }
-
-    checksum >>= 1;
 
     if (checksum == bytes[13]) {
       Serial.println(F("Checksum matches"));
@@ -59,17 +57,17 @@ bool decodeFuego(byte *bytes, int byteCount)
     Serial.println(31 - (bytes[7] & 0x0F));
 
     // Fan speed
-    switch (bytes[8] & 0x0F) {
-      case 0x08:
+    switch (bytes[8] & 0x07) {
+      case 0x00:
         Serial.println(F("FAN: AUTO"));
         break;
-      case 0x0A:
+      case 0x02:
         Serial.println(F("FAN: 1"));
         break;
-      case 0x0B:
+      case 0x03:
         Serial.println(F("FAN: 2"));
         break;
-      case 0x0D:
+      case 0x05:
         Serial.println(F("FAN: 3"));
         break;
     }
