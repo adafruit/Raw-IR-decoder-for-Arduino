@@ -322,6 +322,7 @@ void decodeProtocols()
           decodeSharp(bytes, byteCount) ||
           decodeDaikin(bytes, byteCount) ||
           decodeCarrier(bytes, byteCount) ||
+          decodeCarrier(bytes, byteCount) ||
           decodePanasonicCKP(bytes, byteCount) ||
           decodeHyundai(bytes, currentpulse) ||
           decodeGree(bytes, currentpulse) ||

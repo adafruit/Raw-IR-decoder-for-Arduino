@@ -12,7 +12,6 @@
   (byte & 0x02 ? 1 : 0), \
   (byte & 0x01 ? 1 : 0)
 
-
 byte bitReverse(byte x)
 {
   //          01010101  |         10101010
@@ -24,11 +23,11 @@ byte bitReverse(byte x)
   return x;
 }
 
-bool decodeCarrier(byte *bytes, int byteCount)
+bool decodeCarrier1(byte *bytes, int byteCount)
 {
   // If this looks like a Carrier code...
   if ( byteCount == 18 && bytes[0] == 0x4F && bytes[1] == 0xB0 && (memcmp(bytes, bytes+9, 9) == 0)) {
-    Serial.println(F("Looks like a Carrier protocol"));
+    Serial.println(F("Looks like a Carrier protocol #1"));
 
     // Check if the checksum matches
     byte checksum = 0;
@@ -142,4 +141,70 @@ bool decodeCarrier(byte *bytes, int byteCount)
   }
 
   return false;
+}
+
+bool decodeCarrier2(byte *bytes, int byteCount)
+{
+  // If this looks like a Carrier code...
+  if ( byteCount == 12 && bytes[0] == 0x4D && bytes[1] == 0xB2 && (memcmp(bytes, bytes+6, 6) == 0)) {
+    Serial.println(F("Looks like a Carrier protocol #2"));
+
+    switch (bytes[2] & 0x07) {
+      case 0x05:
+        Serial.println(F("FAN: AUTO"));
+        break;
+      case 0x00:
+        Serial.println(F("FAN: AUTO/DRY AUTO"));
+        break;
+      case 0x01:
+        Serial.println(F("FAN: 1"));
+        break;
+      case 0x02:
+        Serial.println(F("FAN: 2"));
+        break;
+      case 0x04:
+        Serial.println(F("FAN: 3"));
+        break;
+    }
+
+    switch (bytes[4] & 0x30) {
+      case 0x10:
+        Serial.println(F("MODE: AUTO"));
+        break;
+      case 0x00:
+        Serial.println(F("MODE: COOL"));
+        break;
+      case 0x20:
+        if ((bytes[4] & 0x0F) == 0x07) {
+          Serial.println(F("MODE: FAN"));
+        } else {
+          Serial.println(F("MODE: DRY"));
+        }
+        break;
+    }
+
+    const byte temperatures[]  = { 17, 28, 24, 25, 20, 29, 21, 31, 18, 27, 23, 26, 19, 30, 22 };
+    //                              0   1   2   3   4   5   6   7   8   9  10  11  12  13  14
+
+    Serial.print(F("Temperature: "));
+    Serial.println(temperatures[bytes[4] & 0x0F]);
+
+    // Check if the checksum matches
+    uint8_t checksum = ~bytes[4];
+
+    if (checksum == bytes[5]) {
+      Serial.println(F("Checksum matches"));
+    } else {
+      Serial.println(F("Checksum does not match"));
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+bool decodeCarrier(byte *bytes, int byteCount)
+{
+  return decodeCarrier1(bytes, byteCount) || decodeCarrier2(bytes, byteCount);
 }
