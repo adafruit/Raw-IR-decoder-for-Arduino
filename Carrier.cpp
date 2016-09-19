@@ -149,6 +149,15 @@ bool decodeCarrier2(byte *bytes, int byteCount)
   if ( byteCount == 12 && bytes[0] == 0x4D && bytes[1] == 0xB2 && (memcmp(bytes, bytes+6, 6) == 0)) {
     Serial.println(F("Looks like a Carrier protocol #2"));
 
+    switch (bytes[2] & 0x20) {
+      case 0x00:
+        Serial.println(F("POWER: OFF"));
+        break;
+      case 0x20:
+        Serial.println(F("POWER: ON"));
+        break;
+    }
+
     switch (bytes[2] & 0x07) {
       case 0x05:
         Serial.println(F("FAN: AUTO"));
