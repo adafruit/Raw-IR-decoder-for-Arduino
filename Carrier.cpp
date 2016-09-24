@@ -199,9 +199,10 @@ bool decodeCarrier2(byte *bytes, int byteCount)
     Serial.println(temperatures[bytes[4] & 0x0F]);
 
     // Check if the checksum matches
-    uint8_t checksum = ~bytes[4];
+    uint8_t checksum1 = ~bytes[2];
+    uint8_t checksum2 = ~bytes[4];
 
-    if (checksum == bytes[5]) {
+    if (checksum1 == bytes[3] && checksum2 == bytes[5]) {
       Serial.println(F("Checksum matches"));
     } else {
       Serial.println(F("Checksum does not match"));
