@@ -75,13 +75,13 @@ bool decodeFuego(byte *bytes, int byteCount)
     // Vertical air direction
     Serial.print(F("Vertical air direction: "));
     switch (bytes[8] & 0x38) {
-      case 0x38:
-        Serial.println(F("SWING"));
-        break;
       case 0x00:
-        Serial.println(F("UP"));
+        Serial.println(F("AUTO"));
         break;
       case 0x08:
+        Serial.println(F("UP"));
+        break;
+      case 0x10:
         Serial.println(F("MIDDLE UP"));
         break;
       case 0x18:
@@ -92,6 +92,9 @@ bool decodeFuego(byte *bytes, int byteCount)
         break;
       case 0x28:
         Serial.println(F("DOWN"));
+        break;
+      case 0x38:
+        Serial.println(F("SWING"));
         break;
     }
 
