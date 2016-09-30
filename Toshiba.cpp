@@ -6,7 +6,7 @@ byte bitReverse(byte x);
 
 bool decodeToshiba(byte *bytes, int byteCount)
 {
-  // If this looks like a Sharp code...
+  // If this looks like a Toshiba code...
   if ( byteCount == 9 && bytes[0] == 0x4F && bytes[1] == 0xB0 && bytes[2] == 0xC0 && bytes[3] == 0x3F && bytes[4] == 0x80 ) {
     Serial.println(F("Looks like a Toshiba protocol"));
 
