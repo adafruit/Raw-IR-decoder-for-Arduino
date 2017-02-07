@@ -10,6 +10,7 @@ bool decodeHyundai(byte *bytes, int pulseCount);
 bool decodeGree(byte *bytes, int pulseCount);
 bool decodeFuego(byte *bytes, int byteCount);
 bool decodeToshiba(byte *bytes, int byteCount);
+bool decodeNibe(char* symbols, int bitCount);
 
 
 /* Raw IR decoder sketch!
@@ -35,8 +36,7 @@ bool decodeToshiba(byte *bytes, int byteCount);
 #define IRpin_PIN      PINE
 #define IRpin          4
 #else
-#define IRpin_PIN      PIND
-#define IRpin          2
+#error "This software requires Arduino Mega (ATmega 2560 or ATmega 1280)"
 #endif
 
 // the maximum pulse we'll listen for - 65 milliseconds is a long time
@@ -67,15 +67,15 @@ uint16_t space_header_cnt = 0;
 uint32_t space_pause_avg = 0;
 uint16_t space_pause_cnt = 0;
 
-// we will store up to 500 symbols
-char symbols[500];  // decoded symbols
+// we will store up to 1024 symbols
+char symbols[1024];  // decoded symbols
 uint16_t currentpulse = 0; // index for pulses we're storing
 
 uint8_t modelChoice = 0;
 
 // Decoded bytes
 byte byteCount = 0;
-byte bytes[32];
+byte bytes[128];
 
 
 void setup(void) {
@@ -328,7 +328,8 @@ void decodeProtocols()
           decodeHyundai(bytes, currentpulse) ||
           decodeGree(bytes, currentpulse) ||
           decodeFuego(bytes, byteCount) ||
-          decodeToshiba(bytes, byteCount) ))
+          decodeToshiba(bytes, byteCount) ||
+          decodeNibe(symbols, currentpulse)))
   {
     Serial.println(F("Unknown protocol"));
   }
