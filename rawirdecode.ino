@@ -36,7 +36,8 @@ bool decodeNibe(char* symbols, int bitCount);
 #define IRpin_PIN      PINE
 #define IRpin          4
 #else
-#error "This software requires Arduino Mega (ATmega 2560 or ATmega 1280)"
+#define IRpin_PIN      PIND
+#define IRpin          2
 #endif
 
 // the maximum pulse we'll listen for - 65 milliseconds is a long time
