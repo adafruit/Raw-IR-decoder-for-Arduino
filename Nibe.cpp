@@ -1,5 +1,6 @@
 #include <Arduino.h>
-bool decodeNibe(char* symbols, int bitCount)
+
+bool decodeNibe(byte *originalBytes, char* symbols, int bitCount)
 {
   byte bytes[11];
   byte currentBit = 0;
@@ -44,7 +45,27 @@ bool decodeNibe(char* symbols, int bitCount)
   }
   Serial.println();
 
-  // Power mode
+    // Night (low night temp I think)
+    switch (bytes[9] & 0x01) {
+      case 0x00:
+        Serial.println(F("NIGHT MODE OFF"));
+        break;
+      case 0x01:
+        Serial.println(F("NIGHT MODE ON"));
+        break;
+    }
+
+    // Filter
+    switch (bytes[9] & 0x04) {
+      case 0x00:
+        Serial.println(F("FILTER OFF"));
+        break;
+      case 0x04:
+        Serial.println(F("FILTER ON"));
+        break;
+    }
+
+    // Power mode
     switch (bytes[9] & 0x08) {
       case 0x00:
         Serial.println(F("POWER OFF"));
@@ -54,89 +75,133 @@ bool decodeNibe(char* symbols, int bitCount)
         break;
     }
 
-    // Operating mode
-    switch (bytes[2] & 0x0E) {
-      case 0x08:
-        Serial.println(F("MODE HEAT"));
+    // iFeel
+    switch (bytes[9] & 0x32) {
+      case 0x00:
+        Serial.println(F("IFEEL OFF"));
         break;
-      case 0x04:
+      case 0x32:
+        Serial.println(F("IFEEL ON"));
+        break;
+    }
+
+    // Operating mode
+    switch (bytes[2] & 0x0F) {
+      case 0x00:
         Serial.println(F("MODE COOL"));
         break;
       case 0x02:
         Serial.println(F("MODE DRY"));
         break;
-      }
-
-    // Temperature
-
-    byte temperature = ((bytes[2] & 0xF0) >> 4) | ((bytes[3] & 0x01) << 5) - 12;
-    Serial.print(F("Temperature: "));
-    Serial.println(temperature);
+      case 0x04:
+        Serial.println(F("MODE COOL AUTO"));
+        break;
+      case 0x08:
+        Serial.println(F("MODE HEAT"));
+        break;
+    }
 
     // Fan speed
+    Serial.print(F("Fan speed: "));
     switch (bytes[3] & 0x06) {
       case 0x00:
-        Serial.println(F("FAN: AUTO"));
+        Serial.println(F("AUTO"));
         break;
       case 0x02:
-        Serial.println(F("FAN: 1"));
+        Serial.println(F("1"));
         break;
       case 0x04:
-        Serial.println(F("FAN: 2"));
+        Serial.println(F("2"));
         break;
       case 0x06:
-        Serial.println(F("FAN: 3"));
+        Serial.println(F("3"));
         break;
     }
 
-    // Flap position
-    switch (bytes[4] & 0x0F) {
+    // Vertical air direction
+    Serial.print(F("Vertical air direction: "));
+    switch (bytes[4]) {
       case 0x00:
-        Serial.println(F("FLAP: AUTO"));
+        Serial.println(F("AUTO"));
         break;
       case 0x01:
-        Serial.println(F("FLAP: 1"));
+        Serial.println(F("UP"));
         break;
       case 0x02:
-        Serial.println(F("FLAP: 2"));
+        Serial.println(F("MIDDLE UP"));
         break;
       case 0x03:
-        Serial.println(F("FLAP: 3"));
+        Serial.println(F("MIDDLE"));
         break;
       case 0x04:
-        Serial.println(F("FLAP: 4"));
+        Serial.println(F("MIDDLE"));
         break;
       case 0x05:
-        Serial.println(F("FLAP: 5"));
+        Serial.println(F("MIDDLE DOWN"));
         break;
       case 0x06:
-        Serial.println(F("FLAP: 6"));
+        Serial.println(F("DOWN"));
         break;
       case 0x07:
-        Serial.println(F("FLAP: All"));
+        Serial.println(F("SWING"));
         break;
     }
 
-    // Check if the checksum matches
-    byte checksum = 0x00;
+    Serial.print("Temperature: ");
+    int8_t temperature = (((bytes[2] & 0xF0) >> 4) + ((bytes[3] & 0x01) << 4)) + 4;
+    Serial.println(temperature);
 
-    for (byte i = 0; i < 10; i++) {
-      checksum += bytes[i];
+
+
+    // TODO: How to calculate the checksum? This algorithm seems to get bits 0, 6 and 7 right, but how about the other bits?
+    // Here's some material for testing:
+    //
+    // Hh001101011010111100000101100001010101000000000111000000001111100110100000000001000101001001
+    // Hh001101011010111100000111100001010101000000000111000000001111100110100000000001000101001011
+    // Hh001101011010111100000100010001010101000000000111000000001110010110100000000001000111011000
+    // Hh001101011010111100000110010001010101000000000111000000001110010110100000000001000111011010
+    // Hh001101011010111100000101010001010101000000000111000000001110010110100000000001000111011001
+    // Hh001101011010111100000111010001010101000000000111000000001110010110100000000001000111011011
+    // Hh001101011010111100000100110001010101000000000111000000001110010110100000000001000100111000
+    // Hh001101011010111100000110110001010101000000000111000000001110010110100000000001000100111010
+    // Hh001101011010111100000101110001010101000000000111000000001110010110100000000001000100111001
+    // Hh001101011010111100000111110001010101000000000111000000001110010110100000000001000100111011
+    // Hh001101011010111100000100001001010101000000000111000000001111010110100000000001000110100100
+    // Hh001101011010111100000110001001010101000000000111000000001111010110100000000001000110100110
+    // Hh001101011010111100000101001001010101000000000111000000001111010110100000000001000110100101
+    // Hh001101011010111100000111001001010101000000000111000000001111010110100000000001000110100111
+    // Hh001101011010111100000100101001010101000000000111000000001111010110100000000001000101100100
+    // Hh001101011010111100000110101001010101000000000111000000001111010110100000000001000101100110
+    // Hh001101011010111100000101101001010101000000000111000000001111010110100000000001000101100101
+    // Hh001101011010111100000111101001010101000000000111000000001111110110100000000001000101101111
+    // Hh001101011010111100000100011001010101000000000111000000001111110110100000000001000111101100
+    // Hh001101011010111100000110011001010101000000000111000000001111110110100000000001000111101110
+    // Hh001101011010111100000101011001010101000000000111000000001111110110100000000001000111101101
+    // Hh001101011010111100000111011001010101000000000111000000001111110110100000000001000111101111
+    // Hh001101011010111100000100111001010101000000000111000000001111110110100000000001000100011100
+
+    byte checksum = 0b10011010;
+
+    for (int i=0; i<10; i++) {
+      checksum ^= originalBytes[i];
     }
 
-    Serial.print(F("Checksum: "));
-    Serial.println(checksum, HEX);
-    if ( bytes[10] == checksum ) {
-      Serial.println(F("Checksum matches"));
+    Serial.print(bytes[10], BIN);
+    Serial.println(F(" <- original checksum"));
+    Serial.print(checksum, BIN);
+    Serial.println(F(" <- calculated checksum"));
+
+    if (((checksum & 0b11000000) == (bytes[10] & 0b11000000)) && ((checksum & 0b00000001) == (bytes[10] & 0b00000001))) {
+      Serial.println(F("Checksum matches at least partially"));
     } else {
       Serial.println(F("Checksum does not match"));
     }
 
     return true;
   }
+
   return false;
 }
-
 
 
 
