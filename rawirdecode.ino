@@ -1,6 +1,7 @@
 #include <Arduino.h>
 
 bool decodeMitsubishiElectric(byte *bytes, int byteCount);
+bool decodeFujitsu(byte *bytes, int byteCount);
 bool decodeMitsubishiHeavy(byte *bytes, int byteCount);
 bool decodeDaikin(byte *bytes, int byteCount);
 bool decodeSharp(byte *bytes, int byteCount);
@@ -330,6 +331,7 @@ void decodeProtocols()
   Serial.println(F("Decoding known protocols..."));
 
   if ( ! (decodeMitsubishiElectric(bytes, byteCount) ||
+          decodeFujitsu(bytes, byteCount) ||
           decodeMitsubishiHeavy(bytes, byteCount) ||
           decodeSharp(bytes, byteCount) ||
           decodeDaikin(bytes, byteCount) ||
