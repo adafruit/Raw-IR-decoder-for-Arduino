@@ -36,12 +36,19 @@ bool decodeFujitsu(byte *bytes, int byteCount)
         Serial.println(F("POWER ON"));
         break;
       case 0x6C:
-        Serial.println(F("SWING SET"));
+        Serial.println(F("SWING SET VERTICAL"));
+        break;
+      case 0x79:
+        Serial.println(F("SWING SET HORIZONTAL"));
         break;
       default:
         Serial.println(F("POWER unknown"));
         break;
     }
+
+	  if(byteCount < 8) {
+		  return true;
+	  }
 
     // Temperature
     Serial.print(F("Temperature: "));
@@ -93,16 +100,16 @@ bool decodeFujitsu(byte *bytes, int byteCount)
         Serial.println(F("FAN AUTO"));
         break;
       case 0x01:
-        Serial.println(F("FAN 1"));
+        Serial.println(F("FAN HIGH"));
         break;
       case 0x02:
-        Serial.println(F("FAN 2"));
+        Serial.println(F("FAN MED"));
         break;
       case 0x03:
-        Serial.println(F("FAN 3"));
+        Serial.println(F("FAN LOW"));
         break;
       case 0x04:
-        Serial.println(F("FAN 4"));
+        Serial.println(F("FAN QUIET"));
         break;
       default:
         Serial.println(F("FAN unknown"));
@@ -112,7 +119,13 @@ bool decodeFujitsu(byte *bytes, int byteCount)
     // Fan swing
     switch (bytes[10] & 0xF0) {
       case 0x10:
-        Serial.println(F("VANE: SWING"));
+        Serial.println(F("VANE: VERTICAL"));
+        break;
+      case 0x20:
+        Serial.println(F("VANE: HORIZONTAL"));
+        break;
+      case 0x30:
+        Serial.println(F("VANE: BOTH"));
         break;
       case 0x00:
         Serial.println(F("VANE: STILL"));
@@ -122,16 +135,16 @@ bool decodeFujitsu(byte *bytes, int byteCount)
         break;
     }
 
-  /*
-   * Not sure what's going on here, but incrementing time on the remote by 5
-   * minutes, increments this value by 5 as well.
-  */
-  int time = (int)bytes[12] << 8 + bytes[11];
-  Serial.print("Time: ");
-  Serial.println(time);
+    /*
+     * Not sure what's going on here, but incrementing time on the remote by 5
+     * minutes, increments this value by 5 as well.
+     */
+    int time = (int)bytes[12] << 8 + bytes[11];
+    Serial.print("Time: ");
+    Serial.println(time);
    
-  //Economy mode? I'm guessing more modes are encoded here on fancier models.
-  switch (bytes[14]) {
+    //Economy mode? I'm guessing more modes are encoded here on fancier models.
+    switch (bytes[14]) {
       case 0x00:
         Serial.println(F("ECONOMY: ON"));
         break;
