@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-byte bitReverse(byte x);
+// Samsung with remote ARH-465
 
 bool decodeSamsung(byte *bytes, int byteCount)
 {
@@ -59,6 +59,17 @@ bool decodeSamsung(byte *bytes, int byteCount)
         Serial.println(F("FAN: 4"));
         break;
     }
+
+    // Turbo mode
+    Serial.print(F("Turbo mode: "));
+    switch (bytes[9] & 0xF0) {
+      case 0xA0:
+        Serial.println(F("ON"));
+        break;
+      case 0xF0:
+        Serial.println(F("OFF"));
+        break;
+    }   
 
     // Check if the checksum matches
     byte originalChecksum = bytes[8];
