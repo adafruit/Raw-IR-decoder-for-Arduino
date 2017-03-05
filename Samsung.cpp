@@ -60,8 +60,8 @@ bool decodeSamsung(byte *bytes, int byteCount)
         break;
     }
 
-    // Turbo mode
-    Serial.print(F("Turbo mode: "));
+    // Airflow mode
+    Serial.print(F("Airflow: "));
     switch (bytes[9] & 0xF0) {
       case 0xA0:
         Serial.println(F("ON"));
@@ -71,14 +71,25 @@ bool decodeSamsung(byte *bytes, int byteCount)
         break;
     }   
 
+    // Turbo mode
+    Serial.print(F("Turbo mode: "));
+    switch (bytes[10] & 0x0F) {
+      case 0x07:
+        Serial.println(F("ON"));
+        break;
+      case 0x01:
+        Serial.println(F("OFF"));
+        break;
+    } 
+
     // Check if the checksum matches
     byte originalChecksum = bytes[8];
-    bytes[8] = 0;
     byte checksum = 0x00;
 
     // Calculate the byte 8 checksum
-    // Count the number of ONE bits on message bytes 7-14
-    for (uint8_t j=7; j<15; j++) {
+    // Count the number of ONE bits
+    bytes[9] &= 0b11111110;
+    for (uint8_t j=9; j<13; j++) {
       uint8_t samsungByte = bytes[j];
       for (uint8_t i=0; i<8; i++) {
         if ( (samsungByte & 0x01) == 0x01 ) {
@@ -88,7 +99,7 @@ bool decodeSamsung(byte *bytes, int byteCount)
       }
     }
 
-    checksum = 34 - checksum;
+    checksum = 28 - checksum;
     checksum <<= 4;
     checksum |= 0x02;
 
