@@ -146,7 +146,7 @@ bool decodeCarrier1(byte *bytes, int byteCount)
 bool decodeCarrier2(byte *bytes, int byteCount)
 {
   // If this looks like a Carrier code...
-  if ( byteCount == 12 && bytes[0] == 0x4D && bytes[1] == 0xB2 && (memcmp(bytes, bytes+6, 6) == 0)) {
+  if ( byteCount == 12 && ((bytes[0] == 0x4D && bytes[1] == 0xB2) || (bytes[0] == 0xAD && bytes[1] == 0x52)) && (memcmp(bytes, bytes+6, 6) == 0)) {
     Serial.println(F("Looks like a Carrier protocol #2"));
 
     switch (bytes[2] & 0x20) {

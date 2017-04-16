@@ -69,7 +69,7 @@ bool decodeSamsung(byte *bytes, int byteCount)
       case 0xF0:
         Serial.println(F("OFF"));
         break;
-    }   
+    }
 
     // Turbo mode
     Serial.print(F("Turbo mode: "));
@@ -80,7 +80,7 @@ bool decodeSamsung(byte *bytes, int byteCount)
       case 0x01:
         Serial.println(F("OFF"));
         break;
-    } 
+    }
 
     // Check if the checksum matches
     byte originalChecksum = bytes[8];
