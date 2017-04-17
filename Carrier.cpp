@@ -196,6 +196,9 @@ bool decodeCarrier2(byte *bytes, int byteCount)
         case 0x00:
           Serial.println(F("MODE: COOL"));
           break;
+        case 0x30:
+          Serial.println(F("MODE: HEAT"));
+          break;
         case 0x20:
           if ((bytes[4] & 0x0F) == 0x07) {
             Serial.println(F("MODE: FAN"));
