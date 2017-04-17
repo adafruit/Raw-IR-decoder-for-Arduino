@@ -149,54 +149,68 @@ bool decodeCarrier2(byte *bytes, int byteCount)
   if ( byteCount == 12 && ((bytes[0] == 0x4D && bytes[1] == 0xB2) || (bytes[0] == 0xAD && bytes[1] == 0x52)) && (memcmp(bytes, bytes+6, 6) == 0)) {
     Serial.println(F("Looks like a Carrier protocol #2"));
 
-    switch (bytes[2] & 0x20) {
-      case 0x00:
-        Serial.println(F("POWER: OFF"));
-        break;
-      case 0x20:
-        Serial.println(F("POWER: ON"));
-        break;
+    if (bytes[0] == 0xAD && bytes[1] == 0x52)
+    {
+      if (bytes[4] == 0x55)
+      {
+        Serial.println(F("MODE: Frost guard"));
+      }
+      else
+      {
+        Serial.println(F("MODE: Turbo mode"));        
+      }      
     }
+    else
+    {
+      switch (bytes[2] & 0x20) {
+        case 0x00:
+          Serial.println(F("POWER: OFF"));
+          break;
+        case 0x20:
+          Serial.println(F("POWER: ON"));
+          break;
+      }
 
-    switch (bytes[2] & 0x07) {
-      case 0x05:
-        Serial.println(F("FAN: AUTO"));
-        break;
-      case 0x00:
-        Serial.println(F("FAN: AUTO/DRY AUTO"));
-        break;
-      case 0x01:
-        Serial.println(F("FAN: 1"));
-        break;
-      case 0x02:
-        Serial.println(F("FAN: 2"));
-        break;
-      case 0x04:
-        Serial.println(F("FAN: 3"));
-        break;
+      switch (bytes[2] & 0x07) {
+        case 0x05:
+          Serial.println(F("FAN: AUTO"));
+          break;
+        case 0x00:
+          Serial.println(F("FAN: AUTO/DRY AUTO"));
+          break;
+        case 0x01:
+          Serial.println(F("FAN: 1"));
+          break;
+        case 0x02:
+          Serial.println(F("FAN: 2"));
+          break;
+        case 0x04:
+          Serial.println(F("FAN: 3"));
+          break;
+      }
+
+      switch (bytes[4] & 0x30) {
+        case 0x10:
+          Serial.println(F("MODE: AUTO"));
+          break;
+        case 0x00:
+          Serial.println(F("MODE: COOL"));
+          break;
+        case 0x20:
+          if ((bytes[4] & 0x0F) == 0x07) {
+            Serial.println(F("MODE: FAN"));
+          } else {
+            Serial.println(F("MODE: DRY"));
+          }
+          break;
+      }
+
+      const byte temperatures[]  = { 17, 28, 24, 25, 20, 29, 21, 31, 18, 27, 23, 26, 19, 30, 22 };
+      //                              0   1   2   3   4   5   6   7   8   9  10  11  12  13  14
+
+      Serial.print(F("Temperature: "));
+      Serial.println(temperatures[bytes[4] & 0x0F]);
     }
-
-    switch (bytes[4] & 0x30) {
-      case 0x10:
-        Serial.println(F("MODE: AUTO"));
-        break;
-      case 0x00:
-        Serial.println(F("MODE: COOL"));
-        break;
-      case 0x20:
-        if ((bytes[4] & 0x0F) == 0x07) {
-          Serial.println(F("MODE: FAN"));
-        } else {
-          Serial.println(F("MODE: DRY"));
-        }
-        break;
-    }
-
-    const byte temperatures[]  = { 17, 28, 24, 25, 20, 29, 21, 31, 18, 27, 23, 26, 19, 30, 22 };
-    //                              0   1   2   3   4   5   6   7   8   9  10  11  12  13  14
-
-    Serial.print(F("Temperature: "));
-    Serial.println(temperatures[bytes[4] & 0x0F]);
 
     // Check if the checksum matches
     uint8_t checksum1 = ~bytes[2];
