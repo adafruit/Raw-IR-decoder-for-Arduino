@@ -15,6 +15,7 @@ bool decodeNibe(byte *bytes, char* symbols, int bitCount);
 bool decodeHitachi(byte *bytes, int byteCount);
 bool decodeSamsung(byte *bytes, int byteCount);
 bool decodeBallu(byte *bytes, int byteCount);
+bool decodeAUX(byte *bytes, int byteCount);
 
 
 /* Raw IR decoder sketch!
@@ -347,7 +348,8 @@ void decodeProtocols()
           decodeNibe(bytes, symbols, currentpulse) ||
           decodeHitachi(bytes, byteCount) ||
           decodeSamsung(bytes, byteCount) ||
-          decodeBallu(bytes, byteCount)))
+          decodeBallu(bytes, byteCount) ||
+          decodeAUX(bytes, byteCount)))
   {
     Serial.println(F("Unknown protocol"));
   }
