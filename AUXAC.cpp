@@ -18,8 +18,18 @@ bool decodeAUX(byte *bytes, int byteCount)
         break;
     }
 
+    // Turbo mode
+    switch (bytes[5] & 0x40) {
+      case 0x40:
+        Serial.println(F("TURBO: ON"));
+        break;
+    }
+
     // Operating mode
     switch (bytes[6] & 0xE0) {
+      case 0x00:
+        Serial.println(F("MODE AUTO"));
+        break;
       case 0x80:
         Serial.println(F("MODE HEAT"));
         break;
@@ -32,9 +42,6 @@ bool decodeAUX(byte *bytes, int byteCount)
       case 0xC0:
         Serial.println(F("MODE FAN"));
         break;
-//       case 0xC0: // TBD
-//        Serial.println(F("MODE AUTO"));
-//        break;
     }
 
     // Temperature
@@ -54,6 +61,26 @@ bool decodeAUX(byte *bytes, int byteCount)
         break;
       case 0x20:
         Serial.println(F("FAN: 3"));
+        break;
+    }
+
+    // Horizontal swing
+    switch (bytes[02] & 0xE0) {
+      case 0x00:
+        Serial.println(F("Horizontal swing: Off"));
+        break;
+      case 0xE0:
+        Serial.println(F("Horizontal swing: On"));
+        break;
+    }
+
+    // Vertical swing
+    switch (bytes[01] & 0x07) {
+      case 0x00:
+        Serial.println(F("Vertical swing: Off"));
+        break;
+      case 0x07:
+        Serial.println(F("Vertical swing: On"));
         break;
     }
 
