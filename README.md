@@ -4,11 +4,16 @@ Decodes long IR codes, for example from air conditioner / heat pump devices.
 
 Shows the timings, the symbols, and also the decoded signal for certain air conditioners.
 
+Required hardware:
+- Arduino (any compatible will do, but Arduino Uno or Nano is easiest for prototyping)
+- Infrared receiver, for example VS1838 will do fine, see also https://arduino-info.wikispaces.com/IR-RemoteControl
+- Breadboard, wiring
+- IR remote control from the aircon/heatpump you plan to decode
 
 ## Instructions
 
 * Connect an IR receiver into the Arduino
-* Start the sketch, and enter 1, 2 or 3 into the 'Serial Monitor', to select which timings to use
+* Start the sketch, and enter 1, 2, 3, 4 or 5 into the 'Serial Monitor', to select which timings to use
    * Try out the alternatives until you get sensible output
    * The signal should always start with 'Hh', and within the signal there should only be a couple of 'Hh' pairs (if any)
    * 'H' and 'h' should be there only in pairs 'Hh'
