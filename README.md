@@ -19,7 +19,10 @@ Required hardware:
    * 'H' and 'h' should be there only in pairs 'Hh'
    * 'H' stands for 'header mark' and 'h' for 'header space'
 * Point your IR remote to the IR receiver and send the code
-* Mode '9' can be used to decode known signals, in that case you can send the symbols from the terminal, like entering this:
+   * If the symbols are known, then the decoder shows its meaning on the serial monitor
+   * If the symbols are unknown, then you can help by writing a decoder for the unknown remote
+   
+-> Mode '9' can be used to decode known signals, in that case you can send the symbols from the terminal, like entering this:
 
    Hh001101011010111100000111001001010100000000000111000000001111111011010100000001000111001011
 
