@@ -16,6 +16,7 @@ bool decodeHitachi(byte *bytes, int byteCount);
 bool decodeSamsung(byte *bytes, int byteCount);
 bool decodeBallu(byte *bytes, int byteCount);
 bool decodeAUX(byte *bytes, int byteCount);
+bool decodeZHLT01remote(byte *bytes, int byteCount);
 
 
 /* Raw IR decoder sketch!
@@ -28,12 +29,17 @@ bool decodeAUX(byte *bytes, int byteCount);
 
  Code is public domain, check out www.ladyada.net and adafruit.com
  for more tutorials!
+ * VS1838
+ * |---|- VCC (4)
+ * | O |- GND (3)
+ * |---|- OUT (2)
  */
+
 
 // We need to use the 'raw' pin reading methods
 // because timing is very important here and the digitalRead()
 // procedure is slower!
-//uint8_t IRpin = 2;
+// uint8_t IRpin = 11;
 // Digital pin #2 is the same as Pin D2 see
 // http://arduino.cc/en/Hacking/PinMapping168 for the 'raw' pin mapping
 
@@ -44,6 +50,9 @@ bool decodeAUX(byte *bytes, int byteCount);
 #define IRpin_PIN      PIND
 #define IRpin          2
 #endif
+
+#define VCCPin         4
+#define GNDPin         3
 
 // the maximum pulse we'll listen for - 65 milliseconds is a long time
 #define MAXPULSE 65000
@@ -86,7 +95,12 @@ byte bytes[128];
 
 void setup(void) {
 
-  Serial.begin(9600);
+  pinMode (VCCPin, OUTPUT);
+  pinMode (GNDPin, OUTPUT);
+  digitalWrite (VCCPin, HIGH);
+  digitalWrite (GNDPin, LOW);
+
+  Serial.begin(115200);
   delay(1000);
   Serial.println(F("Select model to decode (this affects the IR signal timings detection):"));
   Serial.println(F("* '1' for Panasonic DKE>, Mitsubishi Electric, Fujitsu etc. codes"));
@@ -276,6 +290,8 @@ void printPulses(void) {
 
   // Print the symbols (0, 1, H, h, W)
   Serial.println(F("Symbols:"));
+//  Serial.println("--1-------2-------3-------4-------5-------6-------7-------8-------9-------0-------1-------2-------");
+//  Serial.println("--123456781234567812345678123456781234567812345678123456781234567812345678123456781234567812345678");
   Serial.println(symbols+1);
 
   // Print the decoded bytes
@@ -349,8 +365,12 @@ void decodeProtocols()
           decodeHitachi(bytes, byteCount) ||
           decodeSamsung(bytes, byteCount) ||
           decodeBallu(bytes, byteCount) ||
-          decodeAUX(bytes, byteCount)))
+          decodeAUX(bytes, byteCount) ||
+          decodeZHLT01remote(bytes, byteCount)
+          ))
   {
     Serial.println(F("Unknown protocol"));
+    Serial.print("Bytecount: ");
+    Serial.println(byteCount);
   }
 }
