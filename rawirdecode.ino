@@ -9,6 +9,7 @@ bool decodeCarrier(byte *bytes, int byteCount);
 bool decodePanasonicCKP(byte *bytes, int byteCount);
 bool decodeHyundai(byte *bytes, int pulseCount);
 bool decodeGree(byte *bytes, int pulseCount);
+bool decodeGree_YAC(byte *bytes, int pulseCount);
 bool decodeFuego(byte *bytes, int byteCount);
 bool decodeToshiba(byte *bytes, int byteCount);
 bool decodeNibe(byte *bytes, char* symbols, int bitCount);
@@ -343,6 +344,7 @@ void decodeProtocols()
           decodePanasonicCKP(bytes, byteCount) ||
           decodeHyundai(bytes, currentpulse) ||
           decodeGree(bytes, currentpulse) ||
+          decodeGree_YAC(bytes, currentpulse) ||
           decodeFuego(bytes, byteCount) ||
           decodeToshiba(bytes, byteCount) ||
           decodeNibe(bytes, symbols, currentpulse) ||
