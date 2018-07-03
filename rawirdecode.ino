@@ -7,6 +7,7 @@ bool decodeDaikin(byte *bytes, int byteCount);
 bool decodeSharp(byte *bytes, int byteCount);
 bool decodeCarrier(byte *bytes, int byteCount);
 bool decodePanasonicCKP(byte *bytes, int byteCount);
+bool decodePanasonicCS(byte *bytes, int byteCount);
 bool decodeHyundai(byte *bytes, int pulseCount);
 bool decodeGree(byte *bytes, int pulseCount);
 bool decodeGree_YAC(byte *bytes, int pulseCount);
@@ -342,6 +343,7 @@ void decodeProtocols()
           decodeCarrier(bytes, byteCount) ||
           decodeCarrier(bytes, byteCount) ||
           decodePanasonicCKP(bytes, byteCount) ||
+          decodePanasonicCS(bytes, byteCount) ||
           decodeHyundai(bytes, currentpulse) ||
           decodeGree(bytes, currentpulse) ||
           decodeGree_YAC(bytes, currentpulse) ||
