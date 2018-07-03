@@ -18,6 +18,7 @@ bool decodeHitachi(byte *bytes, int byteCount);
 bool decodeSamsung(byte *bytes, int byteCount);
 bool decodeBallu(byte *bytes, int byteCount);
 bool decodeAUX(byte *bytes, int byteCount);
+bool decodeZHLT01remote(byte *bytes, int byteCount);
 
 
 /* Raw IR decoder sketch!
@@ -278,6 +279,8 @@ void printPulses(void) {
 
   // Print the symbols (0, 1, H, h, W)
   Serial.println(F("Symbols:"));
+//  Serial.println("--1-------2-------3-------4-------5-------6-------7-------8-------9-------0-------1-------2-------");
+//  Serial.println("--123456781234567812345678123456781234567812345678123456781234567812345678123456781234567812345678");
   Serial.println(symbols+1);
 
   // Print the decoded bytes
@@ -353,8 +356,12 @@ void decodeProtocols()
           decodeHitachi(bytes, byteCount) ||
           decodeSamsung(bytes, byteCount) ||
           decodeBallu(bytes, byteCount) ||
-          decodeAUX(bytes, byteCount)))
+          decodeAUX(bytes, byteCount) ||
+          decodeZHLT01remote(bytes, byteCount)
+          ))
   {
     Serial.println(F("Unknown protocol"));
+    Serial.print("Bytecount: ");
+    Serial.println(byteCount);
   }
 }
