@@ -279,8 +279,8 @@ void printPulses(void) {
 
   // Print the symbols (0, 1, H, h, W)
   Serial.println(F("Symbols:"));
-//  Serial.println("--1-------2-------3-------4-------5-------6-------7-------8-------9-------0-------1-------2-------");
-//  Serial.println("--123456781234567812345678123456781234567812345678123456781234567812345678123456781234567812345678");
+  //Serial.println("--1-------2-------3-------4-------5-------6-------7-------8-------9-------0-------1-------2-------3-------4-------5-------");
+  //Serial.println("--123456781234567812345678123456781234567812345678123456781234567812345678123456781234567812345678123456781234567812345678");
   Serial.println(symbols+1);
 
   // Print the decoded bytes
@@ -288,17 +288,34 @@ void printPulses(void) {
 
   // Decode the string of bits to a byte array
   for (uint16_t i = 0; i < currentpulse; i++) {
+   
     if (symbols[i] == '0' || symbols[i] == '1') {
+   
+      if (bitCount == 0) {
+        Serial.print(byteCount); Serial.print(":  ");
+      }
+     
       currentByte >>= 1;
       bitCount++;
 
       if (symbols[i] == '1') {
         currentByte |= 0x80;
       }
+     
+      Serial.print(symbols[i]);
+      if (bitCount == 4) {
+        Serial.print("|");
 
+      }
       if (bitCount == 8) {
         bytes[byteCount++] = currentByte;
         bitCount = 0;
+        Serial.print(" | "); 
+        printByte(currentByte); 
+        Serial.print(" | "); 
+
+        Serial.print(currentByte ,BIN);
+        Serial.println(" "); 
       }
     } else { // Ignore bits which do not form octets
       bitCount = 0;
@@ -308,10 +325,12 @@ void printPulses(void) {
 
   // Print the byte array
   for (int i = 0; i < byteCount; i++) {
-    if (bytes[i] < 0x10) {
-      Serial.print(F("0"));
-    }
-    Serial.print(bytes[i],HEX);
+    // if (bytes[i] < 0x10) {
+    //   Serial.print(F("0"));
+    // }
+    // Serial.print(bytes[i],HEX);
+
+    printByte(bytes[i]);
     if ( i < byteCount - 1 ) {
       Serial.print(F(","));
     }
@@ -333,6 +352,15 @@ void printPulses(void) {
   Serial.print(F("ONE SPACE:    "));
   Serial.println(space_one_avg);
 }
+
+void printByte(byte bytetoprint){
+ if (bytetoprint < 0x10) {
+      Serial.print(F("0"));
+    }
+    Serial.print(bytetoprint ,HEX);
+
+}
+
 
 void decodeProtocols()
 {
