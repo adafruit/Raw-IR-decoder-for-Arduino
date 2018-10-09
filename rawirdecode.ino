@@ -292,6 +292,8 @@ void printPulses(void) {
     if (symbols[i] == '0' || symbols[i] == '1') {
    
       if (bitCount == 0) {
+        if (byteCount < 10)
+          Serial.print("0");
         Serial.print(byteCount); Serial.print(":  ");
       }
      
@@ -310,12 +312,14 @@ void printPulses(void) {
       if (bitCount == 8) {
         bytes[byteCount++] = currentByte;
         bitCount = 0;
-        Serial.print(" | "); 
-        printByte(currentByte); 
-        Serial.print(" | "); 
+        Serial.print(" | ");
+        printByte(currentByte);
+        Serial.print(" | ");
 
-        Serial.print(currentByte ,BIN);
-        Serial.println(" "); 
+        for (int mask = 0x80; mask > 0; mask >>= 1) {
+            Serial.print((currentByte & mask) ? "1" : "0");
+        }
+        Serial.println(" ");
       }
     } else { // Ignore bits which do not form octets
       bitCount = 0;
@@ -353,12 +357,11 @@ void printPulses(void) {
   Serial.println(space_one_avg);
 }
 
-void printByte(byte bytetoprint){
- if (bytetoprint < 0x10) {
-      Serial.print(F("0"));
-    }
-    Serial.print(bytetoprint ,HEX);
-
+void printByte(byte bytetoprint) {
+  if (bytetoprint < 0x10) {
+    Serial.print(F("0"));
+  }
+  Serial.print(bytetoprint, HEX);
 }
 
 
