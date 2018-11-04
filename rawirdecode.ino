@@ -14,6 +14,7 @@ bool decodeGree_YAC(byte *bytes, int pulseCount);
 bool decodeFuego(byte *bytes, int byteCount);
 bool decodeToshiba(byte *bytes, int byteCount);
 bool decodeNibe(byte *bytes, char* symbols, int bitCount);
+bool decodeAirwell(char* symbols, int bitCount);
 bool decodeHitachi(byte *bytes, int byteCount);
 bool decodeSamsung(byte *bytes, int byteCount);
 bool decodeBallu(byte *bytes, int byteCount);
@@ -384,6 +385,7 @@ void decodeProtocols()
           decodeFuego(bytes, byteCount) ||
           decodeToshiba(bytes, byteCount) ||
           decodeNibe(bytes, symbols, currentpulse) ||
+          decodeAirwell(symbols, currentpulse) ||
           decodeHitachi(bytes, byteCount) ||
           decodeSamsung(bytes, byteCount) ||
           decodeBallu(bytes, byteCount) ||
