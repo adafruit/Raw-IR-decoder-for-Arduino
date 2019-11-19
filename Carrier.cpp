@@ -262,15 +262,15 @@ bool decodeCarrier3(byte *bytes, int byteCount)
     {
       if (bytes[8] == 0x20)
       {
-        Serial.println(F("ADVANCED MODE: Frost guard +8c"));
+        Serial.println(F("ADVANCED: Frost guard (+8°C) Mode"));
       }
       else if (bytes[8] == 0xC0)
       {
-        Serial.println(F("ADVANCED MODE: ECO"));
+        Serial.println(F("ADVANCED: Eco/Sleep Mode"));
       }
-      else
+      else if (bytes[8] == 0x80)
       {
-        Serial.println(F("ADVANCED MODE: Hi POWER"));
+        Serial.println(F("ADVANCED: Hi POWER Mode"));
       }      
     }
 	
