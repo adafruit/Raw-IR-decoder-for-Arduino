@@ -136,8 +136,8 @@ bool decodeMitsubishiHeavy(byte *bytes, int byteCount)
 
     return true;
   } else if ( byteCount == 19 && bytes[0] == 0x52 && bytes[1] == 0xAE && bytes[2] == 0xC3 && bytes[3] == 0x1A && bytes[4] == 0xE5) {
-    Serial.println(F("Looks like a Mitsubishi Heavy ZM-S protocol"));
-    Serial.println(F("Model SRKxxZM-S Remote Control RLA502A700B"));
+    Serial.println(F("Looks like a Mitsubishi Heavy ZM-S protocol (Model SRKxxZM-S Remote Control RLA502A700B) or"));
+    Serial.println(F("looks like a Mitsubishi Heavy ZS-S protocol (Model SRKxxZS-S Remote Control RLA502A700L)"));
     
      // Power mode
     switch (bytes[5] & 0x08) {
@@ -301,6 +301,80 @@ bool decodeMitsubishiHeavy(byte *bytes, int byteCount)
         Serial.println(F("OFF"));
         break;         
     } 
+    return true;
+  } else if ( byteCount == 8 && bytes[0] == 0x0A) {
+    Serial.println(F("Looks like a Mitsubishi Heavy FDTC protocol (Model FDTCxxVF Remote Control PJA502A704AA)"));
+     
+     // Power mode
+    switch (bytes[2] & 0x80) {
+      case 0x00:
+        Serial.println(F("POWER OFF"));
+        break;
+      case 0x80:
+        Serial.println(F("POWER ON"));
+        break;
+    }
+
+    // Operating mode
+    switch (bytes[2] & 0x70) {
+      case 0x00:
+        Serial.println(F("MODE AUTO"));
+        break;
+      case 0x40:
+        Serial.println(F("MODE HEAT"));
+        break;
+      case 0x20:
+        Serial.println(F("MODE COOL"));
+        break;
+      case 0x10:
+        Serial.println(F("MODE DRY"));
+        break;
+      case 0x30:
+        Serial.println(F("MODE FAN"));
+        break;
+    }
+    
+    // Temperature
+    Serial.print(F("Temperature: "));
+    Serial.println((bytes[2] & 0x0F) + 16);
+
+    // Fan speed
+    switch (bytes[1] & 0x30) {
+      case 0x00:
+        Serial.println(F("FAN 1"));
+        break;
+      case 0x10:
+        Serial.println(F("FAN 2"));
+        break;
+      case 0x20:
+        Serial.println(F("FAN 3"));
+        break;
+    }
+
+    // Vertical air direction
+    Serial.print(F("Vertical air direction: "));
+    if ((bytes[1] & 0b01000000) == 0x40 )
+    {
+      Serial.println(F("SWING"));
+    }
+    else 
+    {
+      switch ((bytes[3] & 0x30)) {
+        case 0x00:
+          Serial.println(F("UP"));
+          break;
+        case 0x10:
+          Serial.println(F("MIDDLE UP"));
+          break;
+        case 0x20:
+          Serial.println(F("MIDDLE DOWN"));
+          break;
+        case 0x30:
+          Serial.println(F("DOWN"));
+          break;
+      }      
+    }
+   
     return true;
   }  
   return false;
