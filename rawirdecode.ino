@@ -44,6 +44,8 @@ bool decodeZHLT01remote(byte *bytes, int byteCount);
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
 #define IRpin_PIN      PINE
 #define IRpin          4
+#elif defined(ESP32)
+#define IRpin          5	
 #else
 #define IRpin_PIN      PIND
 #define IRpin          2
@@ -87,8 +89,9 @@ uint8_t modelChoice = 0;
 byte byteCount = 0;
 byte bytes[128];
 
-
 void setup(void) {
+
+  pinMode(IRpin, INPUT);
 
   Serial.begin(9600);
   delay(1000);
@@ -205,7 +208,7 @@ void receivePulses(void) {
   while (currentpulse < sizeof(symbols))
   {
      highpulse = 0;
-     while (IRpin_PIN & (1 << IRpin)) {
+     while (gpio_get_level(gpio_num_t(IRpin))) {
        // pin is still HIGH
 
        // count off another few microseconds
@@ -245,7 +248,7 @@ void receivePulses(void) {
 
     // same as above
     lowpulse = 0;
-    while (! (IRpin_PIN & _BV(IRpin))) {
+    while (! gpio_get_level(gpio_num_t(IRpin))) {
        // pin is still LOW
        lowpulse++;
        delayMicroseconds(RESOLUTION);
