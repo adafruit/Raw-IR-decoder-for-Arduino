@@ -44,6 +44,8 @@ bool decodeZHLT01remote(byte *bytes, int byteCount);
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
 #define IRpin_PIN      PINE
 #define IRpin          4
+#elif defined(ESP32)
+#define IRpin          25 // G25 on M5STACK ATOM LITE
 #else
 #define IRpin_PIN      PIND
 #define IRpin          2
@@ -87,8 +89,9 @@ uint8_t modelChoice = 0;
 byte byteCount = 0;
 byte bytes[128];
 
-
 void setup(void) {
+
+  pinMode(IRpin, INPUT);
 
   Serial.begin(9600);
   delay(1000);
@@ -127,7 +130,7 @@ void setup(void) {
         case '9':
           modelChoice = 9;
           break;
-          }
+      }
     }
   }
 
@@ -205,7 +208,7 @@ void receivePulses(void) {
   while (currentpulse < sizeof(symbols))
   {
      highpulse = 0;
-     while (IRpin_PIN & (1 << IRpin)) {
+     while (getPinState()) {
        // pin is still HIGH
 
        // count off another few microseconds
@@ -245,7 +248,7 @@ void receivePulses(void) {
 
     // same as above
     lowpulse = 0;
-    while (! (IRpin_PIN & _BV(IRpin))) {
+    while (! getPinState()) {
        // pin is still LOW
        lowpulse++;
        delayMicroseconds(RESOLUTION);
@@ -270,6 +273,14 @@ void receivePulses(void) {
   }
 }
 
+bool getPinState() {
+#if defined(ESP32)
+  return gpio_get_level(gpio_num_t(IRpin));
+#else
+  return (IRpin_PIN & _BV(IRpin));
+#endif
+}
+
 void printPulses(void) {
 
   int bitCount = 0;
@@ -289,22 +300,22 @@ void printPulses(void) {
 
   // Decode the string of bits to a byte array
   for (uint16_t i = 0; i < currentpulse; i++) {
-   
+
     if (symbols[i] == '0' || symbols[i] == '1') {
-   
+
       if (bitCount == 0) {
         if (byteCount < 10)
           Serial.print("0");
         Serial.print(byteCount); Serial.print(":  ");
       }
-     
+
       currentByte >>= 1;
       bitCount++;
 
       if (symbols[i] == '1') {
         currentByte |= 0x80;
       }
-     
+
       Serial.print(symbols[i]);
       if (bitCount == 4) {
         Serial.print("|");
