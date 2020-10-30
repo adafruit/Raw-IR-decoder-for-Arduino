@@ -10,6 +10,16 @@ Required hardware:
 - Breadboard, wiring
 - IR remote control from the aircon/heatpump you plan to decode
 
+## Build instructions
+
+### Arduino IDE
+* Open the sketch from subdirectory 'rawirdecode' in Arduino IDE and build
+
+### PlatformIO
+* platformio.ini contains build definitions for Arduino Mega and ESP32 (tested on M5STACK ATOM LITE)
+* On Mega, connect the receiver data pin to GPIO 2
+* On ESP32, connect the receiver data pin to GPIO 25
+
 ## Instructions
 
 * Connect an IR receiver into the Arduino
@@ -21,7 +31,7 @@ Required hardware:
 * Point your IR remote to the IR receiver and send the code
    * If the symbols are known, then the decoder shows its meaning on the serial monitor
    * If the symbols are unknown, then you can help by writing a decoder for the unknown remote
-   
+
 -> Mode '9' can be used to decode known signals, in that case you can send the symbols from the terminal, like entering this:
 
    Hh001101011010111100000111001001010100000000000111000000001111111011010100000001000111001011
