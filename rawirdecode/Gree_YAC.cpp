@@ -3,7 +3,14 @@
 bool decodeGree_YAC(byte *bytes, int pulseCount)
 {
   // If this looks like a Gree code...
-  if ( pulseCount == 142 ) {
+  if ( pulseCount == 19 ) {
+	  Serial.println(F("Looks like a Gree YAC protocol for I-Feel"));
+	  Serial.print(F("I-Feel Temperature: "));
+	  Serial.println(bytes[0]);
+	  return true;
+  }
+  
+  if ( pulseCount == 142 || pulseCount == 161 ) {
     Serial.println(F("Looks like a Gree YAC protocol"));
 
     // Check if the checksum matches
@@ -241,6 +248,11 @@ bool decodeGree_YAC(byte *bytes, int pulseCount)
 			break;
 
 	}	
+
+	if (pulseCount == 161) {
+		Serial.print(F("I-Feel Temperature: "));
+		Serial.println(bytes[16]);
+	}
     return true;
   }
 
