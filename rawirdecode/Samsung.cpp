@@ -1,14 +1,15 @@
 #include <Arduino.h>
 
-// Samsung with remote ARH-465
+// Samsung with remote ARH-465 or remote ARH-1362
 
 bool decodeSamsung(byte *bytes, int byteCount)
 {
   // If this looks like a Samsung code...
   if (bytes[0] == 0x02
       && ((byteCount == 21 && bytes[1] == 0xB2) || (byteCount == 14 && bytes[1] == 0x92))
-      && bytes[2] == 0x0F) {
-    Serial.println(F("Looks like a Samsung protocol"));
+      && bytes[2] == 0x0F) 
+  {
+    Serial.println(F("Looks like a short 14 bytes Samsung protocol"));
 
     // Power mode
     if (byteCount == 21)
@@ -47,13 +48,13 @@ bool decodeSamsung(byte *bytes, int byteCount)
         Serial.println(F("FAN: AUTO"));
         break;
       case 0x05:
-        Serial.println(F("FAN: 1"));
+        Serial.println(F("FAN: 1 (low)"));
         break;
       case 0x09:
-        Serial.println(F("FAN: 2"));
+        Serial.println(F("FAN: 2 (medium)"));
         break;
       case 0x0B:
-        Serial.println(F("FAN: 3"));
+        Serial.println(F("FAN: 3 (high)"));
         break;
       case 0x0F:
         Serial.println(F("FAN: 4"));
@@ -115,5 +116,90 @@ bool decodeSamsung(byte *bytes, int byteCount)
     return true;
   }
 
+
+  if (bytes[0] == 0x02
+      && ((byteCount == 21 && bytes[1] == 0xB2) || (byteCount == 21 && bytes[1] == 0x92))
+      && bytes[2] == 0x0F) 
+  {
+    Serial.println(F("Looks like a 21 bytes long Samsung protocol specific ARH-1362 remote"));
+
+    // Power mode
+    if (byteCount == 21 && bytes[1] == 0xB2)
+    {
+      Serial.println(F("POWER OFF"));
+      return true;
+    }
+    Serial.println(F("POWER ON"));
+
+    // Operating mode | fan speed auto
+    switch (bytes[19] & 0xF0) {
+      case 0x00:
+        Serial.println(F("MODE AUTO"));
+        break;
+      case 0x10:
+        Serial.println(F("MODE COOL"));
+        break;
+      case 0x20:
+        Serial.println(F("MODE DRY"));
+        break;
+      case 0x40:
+        Serial.println(F("MODE HEAT"));
+        break;
+    }
+
+    // Temperature
+    Serial.print(F("Temperature: "));
+    Serial.println((bytes[18] >> 4) + 16);
+
+    // Fan speed
+    switch (bytes[19] & 0x0F) {
+      case 0x0D:
+	  case 0x01:
+        Serial.println(F("FAN: AUTO"));
+        break;
+      case 0x05:
+        Serial.println(F("FAN: 1 (low)"));
+        break;
+      case 0x09:
+        Serial.println(F("FAN: 2 (medium)"));
+        break;
+      case 0x0B:
+        Serial.println(F("FAN: 3 (high)"));
+        break;
+    }
+
+    // calculate the checksum
+    uint8_t checksum = 0;
+    byte originalChecksum = bytes[15];
+  
+    // Calculate the byte 15 checksum
+    // Count the number of ONE bits on message uint8_ts 15-20
+    for (uint8_t j=16; j<20; j++) {
+      uint8_t Samsungbyte = bytes[j];
+      for (uint8_t i=0; i<8; i++) {
+        if ( (Samsungbyte & 0x01) == 0x01 ) {
+          checksum++;
+        }
+        Samsungbyte >>= 1;
+      }
+    }
+
+    // Transform the number of ONE bits to the actual checksum
+    checksum = 28 - checksum;
+    checksum <<= 4;
+    checksum += 0x02;	
+	
+    Serial.print(F("Checksum '0x"));
+    Serial.print(checksum, HEX);
+
+    if ( originalChecksum == checksum ) {
+      Serial.println(F("' matches"));
+    } else {
+      Serial.print(F("' does not match 0x"));
+      Serial.println(originalChecksum, HEX);
+    }
+    return true;
+  }
+  
   return false;
 }
