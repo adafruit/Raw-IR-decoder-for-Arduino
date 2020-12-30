@@ -13,6 +13,7 @@ Required hardware:
 ## Build instructions
 Defines for the different brands were introduced to limit the memory footage on a Arduino UNO.
 Uncomment, in the beginning of the sketch, the define for your remote brand.
+You will get a compiler error if you forget to uncomment!
 
 * //#define MITSUBISHI_ELECTRIC
 * //#define FUJITSU
