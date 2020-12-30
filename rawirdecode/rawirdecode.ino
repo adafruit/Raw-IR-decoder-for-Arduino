@@ -239,7 +239,6 @@ void loop(void) {
   currentpulse=0;
   byteCount=0;
 
-  Serial.println("################# Start");  
   if (modelChoice != 9) {
     receivePulses();
   } else {
@@ -247,10 +246,15 @@ void loop(void) {
     currentpulse++;
   }
 
-  printPulses();
-  decodeProtocols();
-  Serial.println("################# End ");  
-  Serial.println();  
+  // avoid false receiving positives
+  if (currentpulse > 1)
+  {
+    Serial.println("################# Start");
+    printPulses();
+    decodeProtocols();
+    Serial.println("################# End ");  
+    Serial.println();  
+  }  
 }
 
 void receivePulses(void) {
