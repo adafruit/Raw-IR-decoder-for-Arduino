@@ -183,8 +183,8 @@ bool decodeSamsung(byte *bytes, int byteCount)
     checksum <<= 4;
     checksum |= (byteCount == 21 && bytes[1] == 0xB2) ? 0x22 : 0x02;
 
-    // incredible hack if power off and temp = 20 
-    if (byteCount == 21 && bytes[1] == 0xB2 && bytes[18] == 0x40)
+    // incredible hack if power off and temp = 20 and mode heat or cool or dry
+    if (byteCount == 21 && bytes[1] == 0xB2 && bytes[18] == 0x40 && ((bytes[19] & 0xF0) == 0x40 || (bytes[19] & 0xF0) == 0x20 || (bytes[19] & 0xF0) == 0x10))
       checksum = 0x02;     
 	
     Serial.print(F("Checksum '0x"));
