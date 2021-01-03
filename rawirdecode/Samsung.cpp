@@ -181,7 +181,11 @@ bool decodeSamsung(byte *bytes, int byteCount)
     // Transform the number of ONE bits to the actual checksum
     checksum = 28 - checksum;
     checksum <<= 4;
-    checksum |= (byteCount == 21 && bytes[1] == 0xB2) ? 0x22 : 0x02;	
+    checksum |= (byteCount == 21 && bytes[1] == 0xB2) ? 0x22 : 0x02;
+
+    // incredible hack if power off and temp = 20 
+    if (byteCount == 21 && bytes[1] == 0xB2 && bytes[18] == 0x40)
+      checksum = 0x02;     
 	
     Serial.print(F("Checksum '0x"));
     Serial.print(checksum, HEX);
