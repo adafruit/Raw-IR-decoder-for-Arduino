@@ -3,20 +3,14 @@
 // Samsung with remote ARH-465 or remote ARH-1362
 
 bool decodeSamsung(byte *bytes, int byteCount)
-{
+{  
   // If this looks like a Samsung code...
   if (bytes[0] == 0x02
-      && ((byteCount == 21 && bytes[1] == 0xB2) || (byteCount == 14 && bytes[1] == 0x92))
+      && (byteCount == 14 && bytes[1] == 0x92)
       && bytes[2] == 0x0F) 
   {
     Serial.println(F("Looks like a short 14 bytes Samsung protocol"));
-
-    // Power mode
-    if (byteCount == 21)
-    {
-      Serial.println(F("POWER OFF"));
-      return true;
-    }
+    
     Serial.println(F("POWER ON"));
 
     // Operating mode
@@ -121,15 +115,15 @@ bool decodeSamsung(byte *bytes, int byteCount)
       && ((byteCount == 21 && bytes[1] == 0xB2) || (byteCount == 21 && bytes[1] == 0x92))
       && bytes[2] == 0x0F) 
   {
-    Serial.println(F("Looks like a 21 bytes long Samsung protocol specific ARH-1362 remote"));
+    Serial.println(F("Looks like a 21 bytes long Samsung protocol"));
 
     // Power mode
     if (byteCount == 21 && bytes[1] == 0xB2)
     {
       Serial.println(F("POWER OFF"));
-      return true;
     }
-    Serial.println(F("POWER ON"));
+    else
+      Serial.println(F("POWER ON"));
 
     // Operating mode | fan speed auto
     switch (bytes[19] & 0xF0) {
@@ -187,7 +181,7 @@ bool decodeSamsung(byte *bytes, int byteCount)
     // Transform the number of ONE bits to the actual checksum
     checksum = 28 - checksum;
     checksum <<= 4;
-    checksum += 0x02;	
+    checksum |= (byteCount == 21 && bytes[1] == 0xB2) ? 0x22 : 0x02;	
 	
     Serial.print(F("Checksum '0x"));
     Serial.print(checksum, HEX);
