@@ -57,7 +57,7 @@ bool decodeZHLT01remote(byte *bytes, int byteCount);
 // what our timing resolution should be, larger is better
 // as its more 'precise' - but too large and you wont get
 // accurate timing
-uint16_t RESOLUTION=20;
+uint16_t RESOLUTION=5;
 
 // The thresholds for different symbols
 uint16_t MARK_THRESHOLD_BIT_HEADER    = 0; // Value between BIT MARK and HEADER MARK
@@ -205,9 +205,13 @@ void receivePulses(void) {
   space_pause_avg = 0;
   space_pause_cnt = 0;
 
+  unsigned long start = micros();
+  unsigned long last = start;
+
   while (currentpulse < sizeof(symbols))
   {
      highpulse = 0;
+     
      while (getPinState()) {
        // pin is still HIGH
 
@@ -223,7 +227,10 @@ void receivePulses(void) {
        }
     }
 
-    highpulse = highpulse * RESOLUTION;
+    // Instructions below here also take time, and need to be counted before the next high pulse.
+    unsigned long ts = micros();
+    highpulse = ts - last;
+    last = ts;
 
     if (currentpulse > 0)
     {
@@ -259,7 +266,9 @@ void receivePulses(void) {
 
     // this is a MARK
 
-    lowpulse = lowpulse * RESOLUTION;
+    ts = micros();
+    lowpulse = ts - last;
+    last = ts;
 
     if ( lowpulse > MARK_THRESHOLD_BIT_HEADER ) {
       symbols[currentpulse] = 'H';
