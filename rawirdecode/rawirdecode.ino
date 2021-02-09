@@ -242,7 +242,8 @@ void receivePulses(void) {
       } else if ( (currentpulse > 0 && symbols[currentpulse-1] == 'H') || highpulse > SPACE_THRESHOLD_ONE_HEADER ) {
         symbols[currentpulse] = 'h';
         // Cumulative moving average, see http://en.wikipedia.org/wiki/Moving_average#Cumulative_moving_average
-        space_header_avg = (highpulse + space_header_cnt * space_header_avg) / ++space_header_cnt;
+        if (highpulse > SPACE_THRESHOLD_ONE_HEADER)
+          space_header_avg = (highpulse + space_header_cnt * space_header_avg) / ++space_header_cnt;
       } else if ( highpulse > SPACE_THRESHOLD_ZERO_ONE ) {
         symbols[currentpulse] = '1';
         space_one_avg = (highpulse + space_one_cnt * space_one_avg) / ++space_one_cnt;
