@@ -249,6 +249,15 @@ bool decodeGree_YAC(byte *bytes, int pulseCount)
 
 	}	
 
+	switch (bytes[5] & 0x4) {
+	case 0x00:
+		Serial.println(F("I-FEEL: OFF"));
+		break;
+	case 0x04:
+		Serial.println(F("I-FEEL: ON"));
+		break;
+	}
+
 	if (pulseCount == 161) {
 		Serial.print(F("I-Feel Temperature: "));
 		Serial.println(bytes[16]);
@@ -258,4 +267,3 @@ bool decodeGree_YAC(byte *bytes, int pulseCount)
 
   return false;
 }
-
