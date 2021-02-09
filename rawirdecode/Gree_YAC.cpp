@@ -259,7 +259,7 @@ bool decodeGree_YAC(byte *bytes, int pulseCount)
 	}
 
 	if (pulseCount == 161) {
-		Serial.print(F("I-Feel Temperature: "));
+		Serial.print(F("I-FEEL TEMPERATURE: "));
 		Serial.println(bytes[16]);
 	}
     return true;
