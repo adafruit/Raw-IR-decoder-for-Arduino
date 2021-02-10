@@ -1,31 +1,55 @@
 #include <Arduino.h>
 
-// uncomment the define corresponding with your remote
-//#define MITSUBISHI_ELECTRIC
-//#define FUJITSU
-//#define MITSUBISHI_HEAVY
-//#define DAIKIN
-//#define SHARP_
-//#define CARRIER
-//#define PANASONIC_CKP
-//#define PANASONIC_CS
-//#define HYUNDAI
-//#define GREE
-//#define GREE_YAC
-//#define FUEGO
-//#define TOSHIBA
-//#define NIBE
-//#define AIRWELL
-//#define HITACHI
-//#define SAMSUNG
-//#define BALLU
-//#define AUX
-//#define ZHLT01_REMOTE
+#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(ESP32)
+  #define MITSUBISHI_ELECTRIC
+  #define FUJITSU
+  #define MITSUBISHI_HEAVY
+  #define DAIKIN
+  #define SHARP_
+  #define CARRIER
+  #define PANASONIC_CKP
+  #define PANASONIC_CS
+  #define HYUNDAI
+  #define GREE
+  #define GREE_YAC
+  #define FUEGO
+  #define TOSHIBA
+  #define NIBE
+  #define AIRWELL
+  #define HITACHI
+  #define SAMSUNG
+  #define BALLU
+  #define AUX
+  #define ZHLT01_REMOTE
+#else
+  // low-memory device,
+  // uncomment the define corresponding with your remote
+  //#define MITSUBISHI_ELECTRIC
+  //#define FUJITSU
+  //#define MITSUBISHI_HEAVY
+  //#define DAIKIN
+  //#define SHARP_
+  //#define CARRIER
+  //#define PANASONIC_CKP
+  //#define PANASONIC_CS
+  //#define HYUNDAI
+  //#define GREE
+  //#define GREE_YAC
+  //#define FUEGO
+  //#define TOSHIBA
+  //#define NIBE
+  //#define AIRWELL
+  //#define HITACHI
+  //#define SAMSUNG
+  //#define BALLU
+  //#define AUX
+  //#define ZHLT01_REMOTE
+#endif
 
 #if !defined(MITSUBISHI_ELECTRIC)&&!defined(FUJITSU)&&!defined(MITSUBISHI_HEAVY)&&!defined(DAIKIN)&&!defined(SHARP_)&&!defined(CARRIER)&&!defined(PANASONIC_CKP)&&!defined(PANASONIC_CS)&&!defined(HYUNDAI)&&!defined(GREE)&&!defined(GREE_YAC)&&!defined(FUEGO)&&!defined(TOSHIBA)&&!defined(NIBE)&&!defined(AIRWELL)&&!defined(HITACHI)&&!defined(SAMSUNG)&&!defined(BALLU)&&!defined(AUX)&&!defined(ZHLT01_REMOTE)
-#error  You must uncomment at least one brand define!!
+  #error  You must uncomment at least one brand define!!
 #endif
-  
+
 
 #if defined(MITSUBISHI_ELECTRIC)
   bool decodeMitsubishiElectric(byte *bytes, int byteCount);
