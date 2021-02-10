@@ -12,9 +12,9 @@ bool decodeGree(byte *bytes, int pulseCount)
       (bytes[1] & 0x0F) +
       (bytes[2] & 0x0F) +
       (bytes[3] & 0x0F) +
-      (bytes[5] & 0xF0) >> 4 +
-      (bytes[6] & 0xF0) >> 4 +
-      (bytes[7] & 0xF0) >> 4 +
+      ((bytes[5] & 0xF0) >> 4) +
+      ((bytes[6] & 0xF0) >> 4) +
+      ((bytes[7] & 0xF0) >> 4) +
       0x0A) & 0xF0;
 
     if (checksum == bytes[8]) {

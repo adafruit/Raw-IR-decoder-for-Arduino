@@ -131,13 +131,13 @@
 // http://arduino.cc/en/Hacking/PinMapping168 for the 'raw' pin mapping
 
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-#define IRpin_PIN      PINE
-#define IRpin          4
+  #define IRpin_PIN      PINE
+  #define IRpin          4
 #elif defined(ESP32)
-#define IRpin          25 // G25 on M5STACK ATOM LITE
+  #define IRpin          25 // G25 on M5STACK ATOM LITE
 #else
-#define IRpin_PIN      PIND
-#define IRpin          2
+  #define IRpin_PIN      PIND
+  #define IRpin          2
 #endif
 
 // the maximum pulse we'll listen for - 65 milliseconds is a long time
@@ -276,9 +276,9 @@ void loop(void) {
     Serial.println("################# Start");
     printPulses();
     decodeProtocols();
-    Serial.println("################# End ");  
-    Serial.println();  
-  }  
+    Serial.println("################# End ");
+    Serial.println();
+  }
 }
 
 void receivePulses(void) {
@@ -308,7 +308,7 @@ void receivePulses(void) {
   while (currentpulse < sizeof(symbols))
   {
      highpulse = 0;
-     
+
      while (getPinState()) {
        // pin is still HIGH
 
@@ -335,18 +335,22 @@ void receivePulses(void) {
       if ( highpulse > SPACE_THRESHOLD_HEADER_PAUSE ) {
         symbols[currentpulse] = 'W';
         // Cumulative moving average, see http://en.wikipedia.org/wiki/Moving_average#Cumulative_moving_average
-        space_pause_avg = (highpulse + space_pause_cnt * space_pause_avg) / ++space_pause_cnt;
+        space_pause_avg = (highpulse + space_pause_cnt * space_pause_avg) / (space_pause_cnt + 1);
+        space_pause_cnt++;
       } else if ( (currentpulse > 0 && symbols[currentpulse-1] == 'H') || highpulse > SPACE_THRESHOLD_ONE_HEADER ) {
         symbols[currentpulse] = 'h';
         // Cumulative moving average, see http://en.wikipedia.org/wiki/Moving_average#Cumulative_moving_average
         if (highpulse > SPACE_THRESHOLD_ONE_HEADER)
-          space_header_avg = (highpulse + space_header_cnt * space_header_avg) / ++space_header_cnt;
+          space_header_avg = (highpulse + space_header_cnt * space_header_avg) / (space_header_cnt + 1);
+          space_header_cnt++;
       } else if ( highpulse > SPACE_THRESHOLD_ZERO_ONE ) {
         symbols[currentpulse] = '1';
-        space_one_avg = (highpulse + space_one_cnt * space_one_avg) / ++space_one_cnt;
+        space_one_avg = (highpulse + space_one_cnt * space_one_avg) / (space_one_cnt + 1);
+        space_one_cnt++;
       } else {
         symbols[currentpulse] = '0';
-        space_zero_avg = (highpulse + space_zero_cnt * space_zero_avg) / ++space_zero_cnt;
+        space_zero_avg = (highpulse + space_zero_cnt * space_zero_avg) / (space_zero_cnt + 1);
+        space_zero_cnt++;
       }
     }
     currentpulse++;
@@ -371,9 +375,11 @@ void receivePulses(void) {
     if ( lowpulse > MARK_THRESHOLD_BIT_HEADER ) {
       symbols[currentpulse] = 'H';
       currentpulse++;
-      mark_header_avg = (lowpulse + mark_header_cnt * mark_header_avg) / ++mark_header_cnt;
+      mark_header_avg = (lowpulse + mark_header_cnt * mark_header_avg) / (mark_header_cnt + 1);
+      mark_header_cnt++;
     } else {
-      mark_bit_avg = (lowpulse + mark_bit_cnt * mark_bit_avg) / ++mark_bit_cnt;
+      mark_bit_avg = (lowpulse + mark_bit_cnt * mark_bit_avg) / (mark_bit_cnt + 1);
+      mark_bit_cnt++;
     }
 
     // we read one high-low pulse successfully, continue!
@@ -489,7 +495,7 @@ void decodeProtocols()
   Serial.println(F("Decoding known protocols..."));
 
   bool knownProtocol;
-  
+
 #if defined(MITSUBISHI_ELECTRIC)
   knownProtocol = decodeMitsubishiElectric(bytes, byteCount);
 #endif
