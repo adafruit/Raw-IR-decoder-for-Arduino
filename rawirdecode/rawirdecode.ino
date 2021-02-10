@@ -1,25 +1,90 @@
 #include <Arduino.h>
 
-bool decodeMitsubishiElectric(byte *bytes, int byteCount);
-bool decodeFujitsu(byte *bytes, int byteCount);
-bool decodeMitsubishiHeavy(byte *bytes, int byteCount);
-bool decodeDaikin(byte *bytes, int byteCount);
-bool decodeSharp(byte *bytes, int byteCount);
-bool decodeCarrier(byte *bytes, int byteCount);
-bool decodePanasonicCKP(byte *bytes, int byteCount);
-bool decodePanasonicCS(byte *bytes, int byteCount);
-bool decodeHyundai(byte *bytes, int pulseCount);
-bool decodeGree(byte *bytes, int pulseCount);
-bool decodeGree_YAC(byte *bytes, int pulseCount);
-bool decodeFuego(byte *bytes, int byteCount);
-bool decodeToshiba(byte *bytes, int byteCount);
-bool decodeNibe(byte *bytes, char* symbols, int bitCount);
-bool decodeAirwell(char* symbols, int bitCount);
-bool decodeHitachi(byte *bytes, int byteCount);
-bool decodeSamsung(byte *bytes, int byteCount);
-bool decodeBallu(byte *bytes, int byteCount);
-bool decodeAUX(byte *bytes, int byteCount);
-bool decodeZHLT01remote(byte *bytes, int byteCount);
+// uncomment the define corresponding with your remote
+//#define MITSUBISHI_ELECTRIC
+//#define FUJITSU
+//#define MITSUBISHI_HEAVY
+//#define DAIKIN
+//#define SHARP_
+//#define CARRIER
+//#define PANASONIC_CKP
+//#define PANASONIC_CS
+//#define HYUNDAI
+//#define GREE
+//#define GREE_YAC
+//#define FUEGO
+//#define TOSHIBA
+//#define NIBE
+//#define AIRWELL
+//#define HITACHI
+//#define SAMSUNG
+//#define BALLU
+//#define AUX
+//#define ZHLT01_REMOTE
+
+#if !defined(MITSUBISHI_ELECTRIC)&&!defined(FUJITSU)&&!defined(MITSUBISHI_HEAVY)&&!defined(DAIKIN)&&!defined(SHARP_)&&!defined(CARRIER)&&!defined(PANASONIC_CKP)&&!defined(PANASONIC_CS)&&!defined(HYUNDAI)&&!defined(GREE)&&!defined(GREE_YAC)&&!defined(FUEGO)&&!defined(TOSHIBA)&&!defined(NIBE)&&!defined(AIRWELL)&&!defined(HITACHI)&&!defined(SAMSUNG)&&!defined(BALLU)&&!defined(AUX)&&!defined(ZHLT01_REMOTE)
+#error  You must uncomment at least one brand define!!
+#endif
+  
+
+#if defined(MITSUBISHI_ELECTRIC)
+  bool decodeMitsubishiElectric(byte *bytes, int byteCount);
+#endif
+#if defined(FUJITSU)
+  bool decodeFujitsu(byte *bytes, int byteCount);
+#endif
+#if defined(MITSUBISHI_HEAVY)
+  bool decodeMitsubishiHeavy(byte *bytes, int byteCount);
+#endif
+#if defined(DAIKIN)
+  bool decodeDaikin(byte *bytes, int byteCount);
+#endif
+#if defined(SHARP_)
+  bool decodeSharp(byte *bytes, int byteCount);
+#endif
+#if defined(CARRIER)
+  bool decodeCarrier(byte *bytes, int byteCount);
+#endif
+#if defined(PANASONIC_CKP)
+  bool decodePanasonicCKP(byte *bytes, int byteCount);
+#endif
+#if defined(PANASONIC_CS)
+  bool decodePanasonicCS(byte *bytes, int byteCount);
+#endif
+#if defined(HYUNDAI)
+  bool decodeHyundai(byte *bytes, int pulseCount);
+#endif
+#if defined(GREE) or defined(GREE_YAC)
+  bool decodeGree(byte *bytes, int pulseCount);
+  bool decodeGree_YAC(byte *bytes, int pulseCount);
+#endif
+#if defined(FUEGO)
+  bool decodeFuego(byte *bytes, int byteCount);
+#endif
+#if defined(TOSHIBA)
+  bool decodeToshiba(byte *bytes, int byteCount);
+#endif
+#if defined(NIBE)
+  bool decodeNibe(byte *bytes, char* symbols, int bitCount);
+#endif
+#if defined(AIRWELL)
+  bool decodeAirwell(char* symbols, int bitCount);
+#endif
+#if defined(HITACHI)
+  bool decodeHitachi(byte *bytes, int byteCount);
+#endif
+#if defined(SAMSUNG)
+  bool decodeSamsung(byte *bytes, int byteCount);
+#endif
+#if defined(BALLU)
+  bool decodeBallu(byte *bytes, int byteCount);
+#endif
+#if defined(AUX)
+  bool decodeAUX(byte *bytes, int byteCount);
+#endif
+#if defined(ZHLT01_REMOTE)
+  bool decodeZHLT01remote(byte *bytes, int byteCount);
+#endif
 
 
 /* Raw IR decoder sketch!
@@ -173,6 +238,7 @@ void loop(void) {
 
   currentpulse=0;
   byteCount=0;
+
   if (modelChoice != 9) {
     receivePulses();
   } else {
@@ -180,8 +246,15 @@ void loop(void) {
     currentpulse++;
   }
 
-  printPulses();
-  decodeProtocols();
+  // avoid false receiving positives
+  if (currentpulse > 1)
+  {
+    Serial.println("################# Start");
+    printPulses();
+    decodeProtocols();
+    Serial.println("################# End ");  
+    Serial.println();  
+  }  
 }
 
 void receivePulses(void) {
@@ -391,31 +464,71 @@ void decodeProtocols()
 {
   Serial.println(F("Decoding known protocols..."));
 
-  if ( ! (decodeMitsubishiElectric(bytes, byteCount) ||
-          decodeFujitsu(bytes, byteCount) ||
-          decodeMitsubishiHeavy(bytes, byteCount) ||
-          decodeSharp(bytes, byteCount) ||
-          decodeDaikin(bytes, byteCount) ||
-          decodeCarrier(bytes, byteCount) ||
-          decodeCarrier(bytes, byteCount) ||
-          decodePanasonicCKP(bytes, byteCount) ||
-          decodePanasonicCS(bytes, byteCount) ||
-          decodeHyundai(bytes, currentpulse) ||
-          decodeGree(bytes, currentpulse) ||
-          decodeGree_YAC(bytes, currentpulse) ||
-          decodeFuego(bytes, byteCount) ||
-          decodeToshiba(bytes, byteCount) ||
-          decodeNibe(bytes, symbols, currentpulse) ||
-          decodeAirwell(symbols, currentpulse) ||
-          decodeHitachi(bytes, byteCount) ||
-          decodeSamsung(bytes, byteCount) ||
-          decodeBallu(bytes, byteCount) ||
-          decodeAUX(bytes, byteCount) ||
-          decodeZHLT01remote(bytes, byteCount)
-          ))
+  bool knownProtocol;
+  
+#if defined(MITSUBISHI_ELECTRIC)
+  knownProtocol = decodeMitsubishiElectric(bytes, byteCount);
+#endif
+#if defined(FUJITSU)
+  knownProtocol = decodeFujitsu(bytes, byteCount);
+#endif
+#if defined(MITSUBISHI_HEAVY)
+  knownProtocol = decodeMitsubishiHeavy(bytes, byteCount);
+#endif
+#if defined(SHARP_)
+  knownProtocol = decodeSharp(bytes, byteCount);
+#endif
+#if defined(DAIKIN)
+  knownProtocol = decodeDaikin(bytes, byteCount);
+#endif
+#if defined(CARRIER)
+  knownProtocol = decodeCarrier(bytes, byteCount);
+#endif
+#if defined(PANASONIC_CKP)
+  knownProtocol = decodePanasonicCKP(bytes, byteCount);
+#endif
+#if defined(PANASONIC_CS)
+  knownProtocol = decodePanasonicCS(bytes, byteCount);
+#endif
+#if defined(HYUNDAI)
+  knownProtocol = decodeHyundai(bytes, currentpulse);
+#endif
+#if defined(GREE) or defined(GREE_YAC)
+  knownProtocol = decodeGree(bytes, currentpulse) || decodeGree_YAC(bytes, currentpulse);
+#endif
+#if defined(FUEGO)
+  knownProtocol = decodeFuego(bytes, byteCount);
+#endif
+#if defined(TOSHIBA)
+  knownProtocol = decodeToshiba(bytes, byteCount);
+#endif
+#if defined(NIBE)
+  knownProtocol = decodeNibe(bytes, symbols, currentpulse);
+#endif
+#if defined(AIRWELL)
+  knownProtocol = decodeAirwell(symbols, currentpulse);
+#endif
+#if defined(HITACHI)
+  knownProtocol = decodeHitachi(bytes, byteCount);
+#endif
+#if defined(SAMSUNG)
+  knownProtocol = decodeSamsung(bytes, byteCount);
+#endif
+#if defined(BALLU)
+  knownProtocol = decodeBallu(bytes, byteCount);
+#endif
+#if defined(AUX)
+  knownProtocol = decodeAUX(bytes, byteCount);
+#endif
+#if defined(ZHLT01_REMOTE)
+  knownProtocol = decodeZHLT01remote(bytes, byteCount);
+#endif
+
+  if (!knownProtocol)
   {
     Serial.println(F("Unknown protocol"));
     Serial.print("Bytecount: ");
     Serial.println(byteCount);
   }
+
 }

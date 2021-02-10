@@ -11,6 +11,30 @@ Required hardware:
 - IR remote control from the aircon/heatpump you plan to decode
 
 ## Build instructions
+Defines for the different brands were introduced to limit the memory footage on a Arduino UNO.
+Uncomment, in the beginning of the sketch, the define for your remote brand.
+You will get a compiler error if you forget to uncomment!
+
+* //#define MITSUBISHI_ELECTRIC
+* //#define FUJITSU
+* //#define MITSUBISHI_HEAVY
+* //#define DAIKIN
+* //#define SHARP_
+* //#define CARRIER
+* //#define PANASONIC_CKP
+* //#define PANASONIC_CS
+* //#define HYUNDAI
+* //#define GREE
+* //#define GREE_YAC
+* //#define FUEGO
+* //#define TOSHIBA
+* //#define NIBE
+* //#define AIRWELL
+* //#define HITACHI
+* //#define SAMSUNG
+* //#define BALLU
+* //#define AUX
+* //#define ZHLT01_REMOTE
 
 ### Arduino IDE
 * Open the sketch from subdirectory 'rawirdecode' in Arduino IDE and build
