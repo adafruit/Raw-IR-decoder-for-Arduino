@@ -44,9 +44,10 @@
   //#define BALLU
   //#define AUX
   //#define ZHLT01_REMOTE
+  //#define PHILCO
 #endif
 
-#if !defined(MITSUBISHI_ELECTRIC)&&!defined(FUJITSU)&&!defined(MITSUBISHI_HEAVY)&&!defined(DAIKIN)&&!defined(SHARP_)&&!defined(CARRIER)&&!defined(PANASONIC_CKP)&&!defined(PANASONIC_CS)&&!defined(HYUNDAI)&&!defined(GREE)&&!defined(GREE_YAC)&&!defined(FUEGO)&&!defined(TOSHIBA)&&!defined(NIBE)&&!defined(AIRWELL)&&!defined(HITACHI)&&!defined(SAMSUNG)&&!defined(BALLU)&&!defined(AUX)&&!defined(ZHLT01_REMOTE)
+#if !defined(MITSUBISHI_ELECTRIC)&&!defined(FUJITSU)&&!defined(MITSUBISHI_HEAVY)&&!defined(DAIKIN)&&!defined(SHARP_)&&!defined(CARRIER)&&!defined(PANASONIC_CKP)&&!defined(PANASONIC_CS)&&!defined(HYUNDAI)&&!defined(GREE)&&!defined(GREE_YAC)&&!defined(FUEGO)&&!defined(TOSHIBA)&&!defined(NIBE)&&!defined(AIRWELL)&&!defined(HITACHI)&&!defined(SAMSUNG)&&!defined(BALLU)&&!defined(AUX)&&!defined(ZHLT01_REMOTE)&&!defined(PHILCO)
   #error  You must uncomment at least one brand define!!
 #endif
 
@@ -108,6 +109,9 @@
 #endif
 #if defined(ZHLT01_REMOTE)
   bool decodeZHLT01remote(byte *bytes, int byteCount);
+#endif
+#if defined(PHILCO)
+  bool decodePhilco(byte *bytes, int byteCount);
 #endif
 
 
@@ -552,6 +556,9 @@ void decodeProtocols()
 #endif
 #if defined(ZHLT01_REMOTE)
   knownProtocol = decodeZHLT01remote(bytes, byteCount);
+#endif
+#if defined(PHILCO)
+  knownProtocol = decodePhilco(bytes, byteCount);
 #endif
 
   if (!knownProtocol)

@@ -35,6 +35,7 @@ You will get a compiler error if you forget to uncomment!
 * //#define BALLU
 * //#define AUX
 * //#define ZHLT01_REMOTE
+* //#define PHILCO
 
 ### Arduino IDE
 * Open the sketch from subdirectory 'rawirdecode' in Arduino IDE and build
