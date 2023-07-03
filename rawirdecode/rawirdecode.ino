@@ -21,6 +21,7 @@
   #define BALLU
   #define AUX
   #define ZHLT01_REMOTE
+  #define ZHJG01_REMOTE
 #else
   // low-memory device,
   // uncomment the define corresponding with your remote
@@ -47,7 +48,7 @@
   //#define PHILCO
 #endif
 
-#if !defined(MITSUBISHI_ELECTRIC)&&!defined(FUJITSU)&&!defined(MITSUBISHI_HEAVY)&&!defined(DAIKIN)&&!defined(SHARP_)&&!defined(CARRIER)&&!defined(PANASONIC_CKP)&&!defined(PANASONIC_CS)&&!defined(HYUNDAI)&&!defined(GREE)&&!defined(GREE_YAC)&&!defined(FUEGO)&&!defined(TOSHIBA)&&!defined(NIBE)&&!defined(AIRWELL)&&!defined(HITACHI)&&!defined(SAMSUNG)&&!defined(BALLU)&&!defined(AUX)&&!defined(ZHLT01_REMOTE)&&!defined(PHILCO)
+#if !defined(MITSUBISHI_ELECTRIC)&&!defined(FUJITSU)&&!defined(MITSUBISHI_HEAVY)&&!defined(DAIKIN)&&!defined(SHARP_)&&!defined(CARRIER)&&!defined(PANASONIC_CKP)&&!defined(PANASONIC_CS)&&!defined(HYUNDAI)&&!defined(GREE)&&!defined(GREE_YAC)&&!defined(FUEGO)&&!defined(TOSHIBA)&&!defined(NIBE)&&!defined(AIRWELL)&&!defined(HITACHI)&&!defined(SAMSUNG)&&!defined(BALLU)&&!defined(AUX)&&!defined(ZHLT01_REMOTE)&&!defined(ZHJG01_REMOTE)&&!defined(PHILCO)
   #error  You must uncomment at least one brand define!!
 #endif
 
@@ -109,6 +110,9 @@
 #endif
 #if defined(ZHLT01_REMOTE)
   bool decodeZHLT01remote(byte *bytes, int byteCount);
+#endif
+#if defined(ZHJG01_REMOTE)
+  bool decodeZHJG01remote(byte *bytes, int byteCount);
 #endif
 #if defined(PHILCO)
   bool decodePhilco(byte *bytes, int byteCount);
@@ -194,6 +198,7 @@ void setup(void) {
   Serial.println(F("* '3' for Mitsubishi Heavy etc. codes"));
   Serial.println(F("* '4' for Hyundai etc. codes"));
   Serial.println(F("* '5' for Samsung etc. codes"));
+  Serial.println(F("* '6' for ZH/JG-01 codes"));
   Serial.println(F("* '9' for entering the bit sequence on the serial monitor (instead of the IR receiver)"));
   Serial.println();
   Serial.print(F("Enter choice: "));
@@ -219,6 +224,9 @@ void setup(void) {
           break;
         case '5':
           modelChoice = 5;
+          break;
+        case '6':
+          modelChoice = 6;
           break;
         case '9':
           modelChoice = 9;
@@ -256,6 +264,11 @@ void setup(void) {
     SPACE_THRESHOLD_ZERO_ONE     =  800;
     SPACE_THRESHOLD_ONE_HEADER   = 2400;
     SPACE_THRESHOLD_HEADER_PAUSE = 10000;
+  } else if (modelChoice == 6) {
+    MARK_THRESHOLD_BIT_HEADER    = 6500;
+    SPACE_THRESHOLD_ZERO_ONE     = 2100;
+    SPACE_THRESHOLD_ONE_HEADER   = 7750;
+    SPACE_THRESHOLD_HEADER_PAUSE = 9000;
   }
 }
 
@@ -556,6 +569,9 @@ void decodeProtocols()
 #endif
 #if defined(ZHLT01_REMOTE)
   knownProtocol = decodeZHLT01remote(bytes, byteCount);
+#endif
+#if defined(ZHJG01_REMOTE)
+  knownProtocol = decodeZHJG01remote(bytes, byteCount);
 #endif
 #if defined(PHILCO)
   knownProtocol = decodePhilco(bytes, byteCount);
