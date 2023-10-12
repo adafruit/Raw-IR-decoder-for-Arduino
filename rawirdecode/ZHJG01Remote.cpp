@@ -19,12 +19,12 @@
  *  The remote sends a 6 Byte message which contains all possible settings every
  *  time.
  *  
- *  Every EVEN Byte (00,02,04,06,08 and 10) hold command data
- *  Every UNeven Byte (01,03,05,07 and 09)  hold a checksum of the corresponding
+ *  Every UNeven Byte (01,03,05,07 and 09)  hold command data
+ *  Every EVEN Byte (00,02,04,06,08 and 10) hold a checksum of the corresponding
  *  command by inverting the bits, for example:
  *  
- *  The identifier byte[0] = 0xD5 = B1101 0101
- *  The checksum byte[1]   = 0x2A = B0010 1010
+ *  The checksum byte[0]   = 0x2A = B0010 1010
+ *  The identifier byte[1] = 0xD5 = B1101 0101
  *  
  *  So, you can check the message by:
  *  - inverting the bits of the checksum byte with the corresponding command, they 
@@ -84,22 +84,22 @@ bool decodeZHJG01remote(byte *bytes, int byteCount)
   Serial.println(F("Looks like a ZH/JG-01 remote control protocol"));
 
 /********************************************************************************
- * Byte[0]: Turbo, Eco, Fan, Vertical Swing
- * TURBO ON:         B0x1xxxxx
- * ECO ON:           B0x0xxxxx
- * TURBO/ECO OFF:    B1xxxxxxx
- * FAN1:             Bx00xxxxx
- * FAN2:             Bx01xxxxx
- * FAN3:             Bx10xxxxx
- * FAN AUTO:         Bx11xxxxx
- * VERTICAL FIXED:   Bxxx01xxx
- * VERTICAL SWING:   Bxxx10xxx
- * VERTICAL WIND:    Bxxx11xxx
+ * Byte[1]: Turbo, Eco, Fan, Vertical Swing
+ * TURBO ON:         B1x0xxxxx
+ * ECO ON:           B1x1xxxxx
+ * TURBO/ECO OFF:    B0xxxxxxx
+ * FAN1:             Bx11xxxxx
+ * FAN2:             Bx10xxxxx
+ * FAN3:             Bx01xxxxx
+ * FAN AUTO:         Bx00xxxxx
+ * VERTICAL FIXED:   Bxxx10xxx
+ * VERTICAL SWING:   Bxxx01xxx
+ * VERTICAL WIND:    Bxxx00xxx
  *******************************************************************************/
   // TURBO ON/OFF
-  Serial.print(F("bytes[0] bit0+2 Turbo:          "));
-  switch (bytes[0]& B10100000) {
-    case B00100000:
+  Serial.print(F("bytes[1] bit0+2 Turbo:          "));
+  switch (bytes[1]& B10100000) {
+    case B10000000:
       Serial.println(F("On"));
       break;
     default:
@@ -107,27 +107,27 @@ bool decodeZHJG01remote(byte *bytes, int byteCount)
   }
 
   // FAN ON/OFF
-  Serial.print(F("bytes[0] bit0+2 Eco:            "));
-  switch (bytes[0]& B10100000) {
-    case B00000000:
+  Serial.print(F("bytes[1] bit0+2 Eco:            "));
+  switch (bytes[1]& B10100000) {
+    case B10100000:
       Serial.println(F("On"));
       break;
     default:
       Serial.println(F("Off"));
   }
 
-  Serial.print(F("bytes[0] bit1-2 Fan Speed:      "));
-  switch (bytes[0] & B01100000) {
-    case B00000000:
+  Serial.print(F("bytes[1] bit1-2 Fan Speed:      "));
+  switch (bytes[1] & B01100000) {
+    case B01100000:
       Serial.println(F("1"));
       break;
-    case B00100000:
+    case B01000000:
       Serial.println(F("2"));
       break;
-    case B01000000:
+    case B00100000:
       Serial.println(F("3"));
       break;
-    case B01100000:
+    case B00000000:
       Serial.println(F("Auto"));
       break;
     default:
@@ -135,15 +135,15 @@ bool decodeZHJG01remote(byte *bytes, int byteCount)
   }
 
   // Vertical air swing
-  Serial.print(F("bytes[0] bit3-4 Vertical:       "));
-  switch (bytes[0] & B00011000) {
-    case B00010000:
+  Serial.print(F("bytes[1] bit3-4 Vertical:       "));
+  switch (bytes[1] & B00011000) {
+    case B00001000:
       Serial.println(F("Swing"));
       break;
-    case B00011000:
+    case B00000000:
       Serial.println(F("Wind"));
       break;
-    case B00001000:
+    case B00010000:
       Serial.println(F("Fixed"));
       break;
     default:
@@ -151,30 +151,30 @@ bool decodeZHJG01remote(byte *bytes, int byteCount)
   }
 
 /********************************************************************************
- * Byte[2]: Temp, Power, Mode
+ * Byte[3]: Temp, Power, Mode
  * TEMP:      Bttttxxxx
- * POWER ON:  Bxxxx0xxx
- * POWER OFF: Bxxxx1xxx
- * MODE HEAT: Bxxxxx011
- * MODE VENT: Bxxxxx100
- * MODE DRY:  Bxxxxx101
- * MODE COOL: Bxxxxx110
- * MODE AUTO: Bxxxxx111
+ * POWER ON:  Bxxxx1xxx
+ * POWER OFF: Bxxxx0xxx
+ * MODE HEAT: Bxxxxx100
+ * MODE VENT: Bxxxxx011
+ * MODE DRY:  Bxxxxx010
+ * MODE COOL: Bxxxxx001
+ * MODE AUTO: Bxxxxx000
  *******************************************************************************/
 
   // TEMPERATURE
   byte tempByte = 0;
-  Serial.print("bytes[2]        Temperature:    ");
-  Serial.print(((~bytes[2] >> 4) & 0b1111) + 17);
+  Serial.print("bytes[3]        Temperature:    ");
+  Serial.print(((bytes[3] >> 4) & 0b1111) + 17);
   Serial.println("°C");
 
   // POWER ON/OFF
-  Serial.print(F("bytes[2] bit4   Power:          "));
-  switch (bytes[2] & B00001000) {
-    case B00001000:
+  Serial.print(F("bytes[3] bit4   Power:          "));
+  switch (bytes[3] & B00001000) {
+    case B00000000:
       Serial.println(F("Off"));
       break;
-    case B00000000:
+    case B00001000:
       Serial.println(F("On"));
       break;
     default:
@@ -182,21 +182,21 @@ bool decodeZHJG01remote(byte *bytes, int byteCount)
   }
 
   // MODE
-  Serial.print(F("bytes[2] bit5-7 Mode:           "));
-  switch (bytes[2] & B00000111) {
-    case B00000111:
+  Serial.print(F("bytes[3] bit5-7 Mode:           "));
+  switch (bytes[3] & B00000111) {
+    case B00000000:
       Serial.println(F("Auto"));
       break;
-    case B00000110:
+    case B00000001:
       Serial.println(F("Cool"));
       break;
-    case B00000100:
+    case B00000011:
       Serial.println(F("Ventilate"));
       break;
-    case B00000101:
+    case B00000010:
       Serial.println(F("Dry"));
       break;
-    case B00000011:
+    case B00000100:
       Serial.println(F("Heat"));
       break;
     default:
