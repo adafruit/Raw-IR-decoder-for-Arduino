@@ -13,6 +13,7 @@
   #define OLIMPIA // try model choice 3
   #define GREE
   #define GREE_YAC
+  #define GREE_YAG
   #define FUEGO
   #define TOSHIBA
   #define NIBE
@@ -39,6 +40,7 @@
   //#define OLIMPIA
   //#define GREE
   //#define GREE_YAC
+  //#define GREE_YAG
   //#define FUEGO
   //#define TOSHIBA
   //#define NIBE
@@ -52,7 +54,7 @@
   //#define KY26_REMOTE
 #endif
 
-#if !defined(MITSUBISHI_ELECTRIC)&&!defined(FUJITSU)&&!defined(MITSUBISHI_HEAVY)&&!defined(DAIKIN)&&!defined(SHARP_)&&!defined(CARRIER)&&!defined(PANASONIC_CKP)&&!defined(PANASONIC_CS)&&!defined(HYUNDAI)&&!defined(GREE)&&!defined(GREE_YAC)&&!defined(FUEGO)&&!defined(TOSHIBA)&&!defined(NIBE)&&!defined(AIRWELL)&&!defined(HITACHI)&&!defined(SAMSUNG)&&!defined(BALLU)&&!defined(AUX)&&!defined(ZHLT01_REMOTE)&&!defined(ZHJG01_REMOTE)&&!defined(PHILCO)&&!defined(KY26_REMOTE)
+#if !defined(MITSUBISHI_ELECTRIC)&&!defined(FUJITSU)&&!defined(MITSUBISHI_HEAVY)&&!defined(DAIKIN)&&!defined(SHARP_)&&!defined(CARRIER)&&!defined(PANASONIC_CKP)&&!defined(PANASONIC_CS)&&!defined(HYUNDAI)&&!defined(GREE)&&!defined(GREE_YAC)&&!defined(GREE_YAG)&&!defined(FUEGO)&&!defined(TOSHIBA)&&!defined(NIBE)&&!defined(AIRWELL)&&!defined(HITACHI)&&!defined(SAMSUNG)&&!defined(BALLU)&&!defined(AUX)&&!defined(ZHLT01_REMOTE)&&!defined(ZHJG01_REMOTE)&&!defined(PHILCO)&&!defined(KY26_REMOTE)
   #error  You must uncomment at least one brand define!!
 #endif
 
@@ -87,9 +89,10 @@
 #if defined(OLIMPIA)
   bool decodeOlimpiaMaestro(byte *bytes, int pulseCount);
 #endif
-#if defined(GREE) or defined(GREE_YAC)
+#if defined(GREE) or defined(GREE_YAC) or defined(GREE_YAG)
   bool decodeGree(byte *bytes, int pulseCount);
   bool decodeGree_YAC(byte *bytes, int pulseCount);
+  bool decodeGree_YAG(byte *bytes, int pulseCount);
 #endif
 #if defined(FUEGO)
   bool decodeFuego(byte *bytes, int byteCount);
@@ -577,8 +580,8 @@ void decodeProtocols()
 #if defined(OLIMPIA)
   knownProtocol = decodeOlimpiaMaestro(bytes, byteCount);
 #endif
-#if defined(GREE) or defined(GREE_YAC)
-  knownProtocol = decodeGree(bytes, currentpulse) || decodeGree_YAC(bytes, currentpulse);
+#if defined(GREE) or defined(GREE_YAC) or defined(GREE_YAG)
+  knownProtocol = decodeGree(bytes, currentpulse) || decodeGree_YAC(bytes, currentpulse) || decodeGree_YAG(bytes, currentpulse);
 #endif
 #if defined(FUEGO)
   knownProtocol = decodeFuego(bytes, byteCount);
