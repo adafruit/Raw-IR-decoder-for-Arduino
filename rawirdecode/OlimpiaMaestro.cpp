@@ -92,10 +92,13 @@ bool decodeOlimpiaMaestro(byte *bytes, int byteCount)
     if ( bytes[10] == checksum ) {
       Serial.println(F("Checksum matches"));
     } else {
+      char buf[8];
       Serial.print(F("Checksum does not match.\nCalculated | Received\n  "));
-      Serial.printf(BYTETOBINARYPATTERN, BYTETOBINARY(checksum));
+      snprintf(buf, sizeof(buf), BYTETOBINARYPATTERN, BYTETOBINARY(checksum));
+      Serial.print(buf);
       Serial.print(F(" | "));
-      Serial.printf(BYTETOBINARYPATTERN, BYTETOBINARY(bytes[10]));
+      snprintf(buf, sizeof(buf), BYTETOBINARYPATTERN, BYTETOBINARY(bytes[10]));
+      Serial.print(buf);
       Serial.println();
     }
 
