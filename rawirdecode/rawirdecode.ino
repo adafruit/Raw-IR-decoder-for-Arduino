@@ -28,9 +28,9 @@
 #else
   // low-memory device,
   // uncomment the define corresponding with your remote
-  //#define MITSUBISHI_ELECTRIC
+  #define MITSUBISHI_ELECTRIC
   //#define FUJITSU
-  //#define MITSUBISHI_HEAVY
+  #define MITSUBISHI_HEAVY
   //#define DAIKIN
   //#define SHARP_
   //#define CARRIER
