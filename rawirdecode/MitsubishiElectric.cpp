@@ -83,6 +83,16 @@ bool decodeMitsubishiElectric(byte *bytes, int byteCount)
         break;
     }
 
+    // Econo Cool
+    Serial.print(F("Econo Cool:"));
+    switch (bytes[14] & 0x20) { // 0b00100000
+      case 0x20:
+        Serial.println(F("ON"));
+        break;
+      case 0x00:
+        Serial.println(F("OFF"));
+        break;
+    }
 
     // Plasma
     Serial.print(F("Plasma: "));
@@ -100,7 +110,7 @@ bool decodeMitsubishiElectric(byte *bytes, int byteCount)
     if (bytes[7] == 0x00) {
       Serial.println(F("10"));
     } else {
-      Serial.println(bytes[7] + 16);
+      Serial.println((bytes[7] & 0x0F) + 16 + (bytes[7] >> 4) * 0.5);
     }
 
     // Fan speed
@@ -121,6 +131,8 @@ bool decodeMitsubishiElectric(byte *bytes, int byteCount)
       case 0x04:
         Serial.println(F("4"));
         break;
+      case 0x05:
+        Serial.println(F("QUIET"));
       default:
         Serial.println(F("unknown"));
         break;
